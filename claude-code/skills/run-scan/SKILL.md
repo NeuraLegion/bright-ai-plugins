@@ -30,7 +30,7 @@ Group entrypoints by equivalent test set so the scan plan stays compact and easy
 For each group, record:
 - `entrypointIds`
 - `tests`
-- `attackLocationTypes`
+- attack locations (body, query, path, or headers)
 - `authObjectId`
 - `repeaters`
 
@@ -42,7 +42,7 @@ Call `runScan` with:
 - `tests`
 - `repeaters` as an array
 - `authObjectId` when applicable
-- `attackLocationTypes` appropriate for the endpoint shape
+- attack locations appropriate for the endpoint shape (body, query, path, or headers)
 
 ### Step 4: Monitor to completion
 

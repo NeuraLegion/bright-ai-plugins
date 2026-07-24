@@ -59,7 +59,7 @@ Do not leave placeholder code, fake guards, or broad speculative refactors.
 Use the same:
 - `entrypointIds`
 - `tests`
-- `attackLocationTypes`
+- attack locations (body, query, path, or headers)
 - `authObjectId`
 - `repeaters`
 

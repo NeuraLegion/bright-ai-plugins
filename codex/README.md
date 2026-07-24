@@ -23,13 +23,32 @@ codex plugin marketplace add ./   # from a marketplace root that lists this plug
 See the Codex docs for marketplace wiring (`.agents/plugins/marketplace.json`).
 
 ## MCP
-`.mcp.json` declares the Bright MCP server over HTTP. Depending on your Codex version you
-may instead configure it in `~/.codex/config.toml`:
+`.mcp.json` declares the Bright MCP server over streamable HTTP. Codex does **not** interpolate
+`${VAR}` inside config values, so the token is wired through Codex's env mechanism
+(`bearer_token_env_var`) and the URL is a literal. Bright MCP accepts both `Bearer` and
+`Api-Key` schemes, so `bearer_token_env_var = "BRIGHT_TOKEN"` authenticates cleanly.
+
+```json
+{
+  "mcp_servers": {
+    "brightsec": {
+      "url": "https://app.brightsec.com/mcp",
+      "bearer_token_env_var": "BRIGHT_TOKEN"
+    }
+  }
+}
+```
+
+- Export your token as `BRIGHT_TOKEN` in the environment Codex runs in.
+- **Self-hosted / non-default cluster:** edit `url` to `https://<your-BRIGHT_HOSTNAME>/mcp`
+  (Codex can't expand `${BRIGHT_HOSTNAME}` here).
+
+Equivalent `~/.codex/config.toml` if you prefer host-level config over the bundled plugin:
 
 ```toml
 [mcp_servers.brightsec]
 url = "https://app.brightsec.com/mcp"
-http_headers = { Authorization = "Api-Key ${BRIGHT_TOKEN}" }
+bearer_token_env_var = "BRIGHT_TOKEN"
 ```
 
 ## Safety

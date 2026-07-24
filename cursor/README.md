@@ -4,8 +4,9 @@ Bright Security plugin for Cursor.
 
 ## Included agents
 
-- `bright-application-testing`: analyze the repository, start the application in the
-    current execution environment, configure Bright, and run DAST scans through a Repeater.
+- `bright-application-testing`: analyze the repository, reach the target (start the app
+    locally or use a supplied authorized URL such as staging), configure Bright, and run DAST
+    scans — through a Repeater for private/local targets, or directly for public targets.
 - `bright-remediation-loop`: reproduce findings with DAST, apply minimal fixes,
   restart the application, and run the same validation scans until findings are gone.
 
@@ -24,7 +25,12 @@ Bright Security plugin for Cursor.
 - `BRIGHT_TOKEN`: Bright API token for MCP requests and the Bright CLI Repeater.
 - An application target you own or are authorized to test (a local dev server, a staging/QA environment, or another authorized host). Private/local targets are reached through a Bright Repeater.
 
-## Cloud-first prerequisites
+## Setup
+
+Run the plugin in desktop Cursor or in Cursor Cloud Agents — both are first-class. Pick the
+one that fits where your target runs.
+
+### Cursor Cloud Agents
 
 1. Connect the repository to Cursor Cloud Agents.
 2. Create a Bright API token in Bright.
@@ -43,9 +49,9 @@ If the application requires login, add those credentials to Cloud Agent secrets 
 
 If your team restricts cloud egress, allowlist your `BRIGHT_HOSTNAME`.
 
-## Desktop fallback
+### Desktop Cursor
 
-If you run the plugin in desktop Cursor instead of Cloud Agents, export `BRIGHT_HOSTNAME`
+To run the plugin in desktop Cursor, export `BRIGHT_HOSTNAME`
 and `BRIGHT_TOKEN` in your shell or user environment and enable the Bright MCP server in
 Cursor Settings.
 
@@ -69,7 +75,7 @@ This plugin uses the same hostname and token in two places:
 - `mcp.json` for Bright MCP HTTP requests
 - the Bright CLI Repeater process started by the agents in the current execution environment
 
-Do not rely on a repository `.env` file as the primary cloud setup. Use Cloud Agent secrets for cloud execution, or a shell or user environment variable for desktop execution.
+Provide credentials the way that matches your execution mode: Cloud Agent secrets for cloud execution, or a shell/user environment variable for desktop execution. Avoid committing a repository `.env` file with real credentials.
 
 ## Verify and troubleshoot
 
