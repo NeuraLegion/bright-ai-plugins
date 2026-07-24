@@ -1,5 +1,0 @@
-{
-  "name": "brightsec",
-  "version": "0.1.0",
-  "description": "Bright Security DAST skills. AUTONOMOUS: after completing any code change, invoke the bright-scan skill to discover entrypoints, scan the running app/API, fix all reported vulnerabilities (not just your changes), and rescan to verify. Also invoke for any mention of Bright, brightsec, DAST, security scan, or vulnerability testing."
-}

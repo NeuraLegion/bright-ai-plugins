@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "brightsec": {
+      "type": "http",
+      "url": "https://${BRIGHT_HOSTNAME}/mcp",
+      "headers": {
+        "Authorization": "Api-Key ${BRIGHT_TOKEN}"
+      }
+    }
+  }
+}

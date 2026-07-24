@@ -1,0 +1,22 @@
+{
+  "name": "bright-security",
+  "version": "1.0.0",
+  "description": "Bright DAST scanning and remediation automation for Codex using the Bright MCP server.",
+  "author": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com",
+    "url": "https://brightsec.com"
+  },
+  "homepage": "https://docs.brightsec.com",
+  "repository": "https://github.com/NeuraLegion/bright-ai-plugins",
+  "license": "MIT",
+  "keywords": ["codex", "bright", "dast", "security", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Bright Security",
+    "shortDescription": "Bright DAST scanning and remediation",
+    "category": "Security"
+  }
+}

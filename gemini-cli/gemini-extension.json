@@ -1,0 +1,14 @@
+{
+  "name": "bright-security",
+  "version": "1.0.0",
+  "description": "Bright DAST scanning and remediation automation for Gemini CLI using the Bright MCP server.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "brightsec": {
+      "httpUrl": "https://${BRIGHT_HOSTNAME}/mcp",
+      "headers": {
+        "Authorization": "Api-Key ${BRIGHT_TOKEN}"
+      }
+    }
+  }
+}
