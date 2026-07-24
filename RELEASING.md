@@ -45,5 +45,5 @@ git push origin "v$(cat VERSION)"
 ```
 
 Create a GitHub Release from the tag. For Claude/Codex, the marketplace is served straight from the
-repo (`/plugin marketplace add NeuraLegion/bright-agent-skills`), so a merged, tagged `main` is the
+repo (`/plugin marketplace add NeuraLegion/bright-ai-plugins`), so a merged, tagged `main` is the
 release.

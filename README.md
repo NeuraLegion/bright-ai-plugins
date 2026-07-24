@@ -76,7 +76,7 @@ Add the marketplace (Claude reads `.claude-plugin/marketplace.json` from the rep
 install the umbrella plugin:
 
 ```
-/plugin marketplace add NeuraLegion/bright-agent-skills
+/plugin marketplace add NeuraLegion/bright-ai-plugins
 /plugin install bright@brightsec
 ```
 
@@ -92,7 +92,7 @@ individual skills instead:
 ```
 
 Manage with `/plugin` (list, enable/disable, update). To test before pushing to GitHub, point the
-marketplace at a local clone: `/plugin marketplace add /path/to/bright-agent-skills`.
+marketplace at a local clone: `/plugin marketplace add /path/to/bright-ai-plugins`.
 
 </details>
 
@@ -100,7 +100,7 @@ marketplace at a local clone: `/plugin marketplace add /path/to/bright-agent-ski
 <summary><strong>Codex</strong></summary>
 
 ```
-/plugin marketplace add NeuraLegion/bright-agent-skills
+/plugin marketplace add NeuraLegion/bright-ai-plugins
 /plugin install bright-scan@brightsec
 /plugin install bright-api@brightsec
 /plugin install bright-auth@brightsec
@@ -119,7 +119,7 @@ installs the default set in one command.
 Install straight from the GitHub URL:
 
 ```bash
-gemini extensions install https://github.com/NeuraLegion/bright-agent-skills
+gemini extensions install https://github.com/NeuraLegion/bright-ai-plugins
 ```
 
 Gemini reads `gemini-extension.json` and discovers skills under `skills/`. Update later with
@@ -134,8 +134,8 @@ Clone and copy the skills into the Copilot discovery folder (`-L` dereferences t
 symlinks so the copies are standalone):
 
 ```bash
-git clone https://github.com/NeuraLegion/bright-agent-skills.git
-bash bright-agent-skills/scripts/install.sh --platform copilot --target .
+git clone https://github.com/NeuraLegion/bright-ai-plugins.git
+bash bright-ai-plugins/scripts/install.sh --platform copilot --target .
 ```
 
 This installs the five skills into `.agents/skills/`. Confirm they appear under **GitHub Copilot →
@@ -151,15 +151,15 @@ Skills are auto-discovered from `.opencode/skills/`. Clone and copy (`-L` derefe
 internal symlinks):
 
 ```bash
-git clone https://github.com/NeuraLegion/bright-agent-skills.git
+git clone https://github.com/NeuraLegion/bright-ai-plugins.git
 
 # Project-local (this repo only):
 mkdir -p .opencode/skills
-cp -rL bright-agent-skills/.opencode/skills/* .opencode/skills/
+cp -rL bright-ai-plugins/.opencode/skills/* .opencode/skills/
 
 # Global (all projects):
 mkdir -p ~/.config/opencode/skills
-cp -rL bright-agent-skills/.opencode/skills/* ~/.config/opencode/skills/
+cp -rL bright-ai-plugins/.opencode/skills/* ~/.config/opencode/skills/
 ```
 
 </details>
@@ -171,8 +171,8 @@ The installer copies generated rules (`.cursor/rules/`) and native skills (`.cur
 your project:
 
 ```bash
-git clone https://github.com/NeuraLegion/bright-agent-skills.git
-bash bright-agent-skills/scripts/install.sh --platform cursor --target .
+git clone https://github.com/NeuraLegion/bright-ai-plugins.git
+bash bright-ai-plugins/scripts/install.sh --platform cursor --target .
 ```
 
 ```powershell
