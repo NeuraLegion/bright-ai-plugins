@@ -1,0 +1,27 @@
+{
+  "name": "bright",
+  "version": "0.1.0",
+  "description": "Bright umbrella plugin \u2014 installs the default Bright skill set (bright-scan, bright-api, bright-auth, bright-ci) in one command.",
+  "author": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com",
+    "url": "https://brightsec.com"
+  },
+  "homepage": "https://docs.brightsec.com",
+  "repository": "https://github.com/NeuraLegion/bright-agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "appsec",
+    "bright",
+    "brightsec",
+    "dast",
+    "umbrella"
+  ],
+  "dependencies": [
+    "bright-scan",
+    "bright-api",
+    "bright-auth",
+    "bright-ci"
+  ]
+}

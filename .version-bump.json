@@ -1,0 +1,31 @@
+{
+  "files": [
+    { "path": "VERSION", "field": "version", "type": "raw" },
+    { "path": "plugin.json", "field": "version", "type": "json" },
+    { "path": ".codex-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "gemini-extension.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-scan/.claude-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-scan/.codex-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-scan/skills/bright-scan/SKILL.md", "field": "version", "type": "yaml-frontmatter" },
+    { "path": "plugins/bright-api/.claude-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-api/.codex-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-api/skills/bright-api/SKILL.md", "field": "version", "type": "yaml-frontmatter" },
+    { "path": "plugins/bright-auth/.claude-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-auth/.codex-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-auth/skills/bright-auth/SKILL.md", "field": "version", "type": "yaml-frontmatter" },
+    { "path": "plugins/bright-ci/.claude-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-ci/.codex-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-ci/skills/bright-ci/SKILL.md", "field": "version", "type": "yaml-frontmatter" },
+    { "path": "plugins/bright-lab/.claude-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-lab/.codex-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright-lab/skills/bright-lab/SKILL.md", "field": "version", "type": "yaml-frontmatter" },
+    { "path": "plugins/bright/.claude-plugin/plugin.json", "field": "version", "type": "json" },
+    { "path": "plugins/bright/.codex-plugin/plugin.json", "field": "version", "type": "json" }
+  ],
+  "marketplace_manifests": [
+    { "path": ".claude-plugin/marketplace.json", "field": "version", "type": "json-plugins-array" }
+  ],
+  "audit": {
+    "exclude": ["CHANGELOG.md", "RELEASING.md", "node_modules", ".git", ".version-bump.json", "scripts/bump-version.sh", "cursor/"]
+  }
+}

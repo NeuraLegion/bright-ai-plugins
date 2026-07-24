@@ -1,0 +1,126 @@
+---
+description: >
+  Bright DAST security scanning. Use when the user asks to run or perform a security or DAST scan, to test an app or API for vulnerabilities, or to verify a vulnerability is fixed — and proactively right after you complete a code change (feature, bugfix, refactor); "done" means "done and secure" (discover, scan, fix all reported vulnerabilities, rescan). Do NOT use for: informational questions about what Bright is or detects; querying existing findings or posture across projects (use the bright-api rule); configuring authentication only (bright-auth); or wiring CI pipelines (bright-ci).
+globs:
+alwaysApply: true
+---
+
+# Bright Scan Skill
+
+This skill makes the agent the security-testing orchestrator in an agentic coding loop.
+
+**Code changes → Start app/API → Discover entrypoints → Run scan → Parse vulnerabilities → Fix → Rescan**
+
+There are two runtimes. Detect which is available and prefer MCP:
+
+1. **Bright MCP server** (preferred for agentic use) — the agent calls tools directly
+   (`runDiscovery`, `runScan`, `listScanVulnerabilities`, …). See `references/mcp-tools.md`.
+2. **Bright CLI** (`bright-cli`) — shell-driven scans, and the runtime CI uses. See
+   `references/cli-reference.md`.
+
+---
+
+## Prerequisites (preflight — run before anything else)
+
+1. **API key.** Bright authenticates with an organization or personal API key with the
+   `bot`, `scans:run`, and `scans:read` scopes. It must be present as an environment variable —
+   never hardcoded:
+
+   ```bash
+   echo "${BRIGHT_TOKEN:?BRIGHT_TOKEN is not set — export your Bright API key first}" >/dev/null
+   ```
+
+2. **Project ID.** Every scan runs under a Bright project. If the user has no custom project,
+   use the Default Project ID. With MCP, call `listProjects` to resolve it.
+
+3. **Runtime.**
+   - MCP: confirm the Bright MCP server is connected (its endpoint is typically
+     `https://app.brightsec.com/mcp`, authenticated with the API key). If tools are unavailable,
+     fall back to the CLI.
+   - CLI: `bright-cli --version` should print a version. If missing, install with
+     `npm install @brightsec/cli -g` (see `references/cli-reference.md`).
+
+4. **Private/local targets need a Repeater.** If the target is `localhost` or otherwise not
+   publicly reachable, a connected [Repeater](https://docs.brightsec.com/docs/on-premises-repeater-local-agent)
+   is required. With MCP use `listRepeaters` / `createRepeater`; with the CLI run
+   `bright-cli repeater --token $BRIGHT_TOKEN --id <REPEATER_ID>`.
+
+If any prerequisite is missing, stop and tell the user exactly what to provide.
+
+---
+
+## Companion skills
+
+| Need | Skill |
+|------|-------|
+| Report posture / query existing findings across projects | `bright-api` |
+| Configure or debug authentication objects | `bright-auth` |
+| Wire Bright into a CI/CD pipeline | `bright-ci` |
+| Generate a vulnerable target app to test against | `bright-lab` |
+
+---
+
+## Workflow
+
+### Phase 1 — Start the application/API
+
+The scan needs a running target. Determine the base URL:
+
+- Read repo docs (`README`, `docker-compose.yml`, `Makefile`, framework config) to learn how the
+  app starts and on which port.
+- Start it if it isn't already running. Prefer a real local run or `docker compose up`.
+- Record the base URL (e.g. `http://localhost:3000`). For a private URL, ensure a Repeater is
+  connected (see preflight).
+
+### Phase 2 — Discover entrypoints
+
+Bright scans *entrypoints* (concrete HTTP requests). Get them one of these ways, best first:
+
+1. **OpenAPI/Swagger spec** — if the app serves or ships a spec, upload it
+   (`uploadApiDefinition`) and run `runDiscovery` with the returned `fileId`. Most accurate.
+2. **Crawler** — run `runDiscovery` with `crawlerUrls: ["<base-url>"]` to crawl the app.
+3. **Manual** — for a targeted test, add specific requests with `addEntrypoint`.
+
+Poll `getDiscoveryStatus` until complete, then `listEntrypoints` (or
+`listDiscoveryEntrypoints`) to confirm coverage. If discovery found far fewer entrypoints than the
+code suggests, treat it as a coverage gap: prefer wiring an OpenAPI spec or adding auth
+(see `bright-auth`) before scanning.
+
+### Phase 3 — Run the scan
+
+- MCP: `runScan` with the project, target entrypoints (by `entrypointIds` or
+  `entrypointStatuses` like `["new","changed","vulnerable"]`), and either `tests` (specific test
+  types from `listTests`) or a `templateId`. For private targets pass the `repeaters`.
+- CLI: `bright-cli scan:run --token $BRIGHT_TOKEN --project <ID> --repeater <ID> --name "<name>" --crawler <url> --smart`.
+
+Prefer targeting `entrypointStatuses: ["new","changed"]` for fast feedback in the coding loop, and
+a fuller set (or `templateId`) before a release. Poll `getScanStatus` (CLI: `bright-cli scan:polling`)
+until the scan finishes.
+
+### Phase 4 — Parse vulnerabilities
+
+- `listScanVulnerabilities` for the scan, then `getScanVulnerability` for evidence and reproduction
+  detail on each finding. See `references/findings-and-fixes.md` for the schema, severity ordering,
+  and the fix-task format.
+- Use `getScanEntrypoint` to inspect the exact request/response that triggered a finding.
+- If the scan errored or under-covered, check `getScanWarnings` / `getScanLogs` and fix the cause
+  (often auth or an unreachable target) before trusting the results.
+
+### Phase 5 — Fix, then rescan
+
+- Turn each finding into a concrete fix task, ordered by severity then exploitability. Fix **all**
+  reported vulnerabilities, not only those your change introduced.
+- After fixing, rescan the affected entrypoints (`runScan` with `entrypointStatuses: ["vulnerable"]`,
+  or CLI `scan:retest`) and confirm the finding is resolved.
+- Loop until the target severity threshold is clean, then summarize what was found, fixed, and
+  verified.
+
+---
+
+## Guardrails
+
+- **Only scan targets you own or are authorized to test.** DAST sends real attack traffic. Never
+  point a scan at third-party systems without written authorization.
+- **Never hardcode `BRIGHT_TOKEN`.** Read it from the environment in every config, command, and CI
+  file this skill produces.
+- **Prefer a Repeater for local/private targets** rather than exposing them to the internet.

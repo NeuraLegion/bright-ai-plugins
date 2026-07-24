@@ -1,0 +1,79 @@
+---
+description: >
+  Bright MCP tool catalog: scan tools (runScan, getScanStatus, listScanVulnerabilities, getScanVulnerability, getScanEntrypoint), discovery tools (runDiscovery, uploadApiDefinition, listEntrypoints), entrypoint CRUD, auth tools, and projects/tests/repeaters. Use when calling Bright MCP tools to drive a scan.
+globs:
+alwaysApply: false
+---
+# Bright MCP tool catalog
+
+The Bright MCP server is remote and cloud-hosted — nothing runs locally. Point an
+MCP-compatible client at the Bright endpoint (default `https://app.brightsec.com/mcp`) and
+authenticate with your API key. Reference: https://docs.brightsec.com/docs/bright-mcp-tools
+
+## Scans
+
+| Tool | Purpose |
+|------|---------|
+| `runScan` | Start a scan against entrypoints. Target by `entrypointIds` or `entrypointStatuses` (`["new","changed","vulnerable"]`). Provide `tests` or `templateId`. Private targets: pass `repeaters`. |
+| `getScanStatus` | Current status of a scan run. |
+| `stopScan` | Stop a running scan (only when stoppable). |
+| `listScans` | List scans for a project. |
+| `getScanLogs` | Engine logs with severity/search/cursor filters. |
+| `getScanWarnings` | Scan errors/warnings with mitigation detail. |
+| `listScanVulnerabilities` | Vulnerabilities found in a scan (filter + paginate). |
+| `getScanVulnerability` | Full detail for one vulnerability (evidence, reproduction). |
+| `listScanEntrypoints` | Entrypoints observed during a scan (coverage/connectivity). |
+| `getScanEntrypoint` | Exact request/response captured during a scan. |
+
+## Discovery
+
+| Tool | Purpose |
+|------|---------|
+| `runDiscovery` | Discover endpoints via `crawlerUrls` or an API def `fileId`. Private targets: pass `repeaters`. |
+| `getDiscoveryStatus` | Status of a discovery run. |
+| `stopDiscovery` | Stop a running discovery. |
+| `listDiscoveries` | List discoveries for a project. |
+| `getDiscoveryLogs` / `getDiscoveryWarnings` | Debug discovery. |
+| `listDiscoveryEntrypoints` / `getDiscoveryEntrypoint` | Inspect discovery coverage and captured requests. |
+| `uploadApiDefinition` | Upload an OpenAPI/Swagger file (URL or content). Returns a `fileId`. |
+
+## Entrypoints
+
+| Tool | Purpose |
+|------|---------|
+| `listEntrypoints` | List discovered endpoints/URLs for a project. |
+| `getEntrypoint` | Full definition of one entrypoint (headers, body, config). |
+| `addEntrypoint` | Manually add an entrypoint. |
+| `editEntrypoint` | Update an entrypoint's request/headers/body/auth. |
+| `deleteEntrypoint` | Delete an entrypoint (irreversible). |
+
+## Vulnerabilities (project-wide)
+
+| Tool | Purpose |
+|------|---------|
+| `listVulnerabilities` | All vulnerabilities for a project (post-scan review). |
+
+## Authentication (see the `bright-auth` skill for the full workflow)
+
+| Tool | Purpose |
+|------|---------|
+| `listAuths` / `getAuth` | Find/inspect auth configs. |
+| `addAuth` / `editAuth` / `deleteAuth` | Manage auth objects. |
+| `testAuth` | Run an auth test and return a verdict with per-result evidence. |
+
+## Projects, tests, repeaters
+
+| Tool | Purpose |
+|------|---------|
+| `listProjects` | Resolve the project ID before scanning. |
+| `listTests` | Available security test types (SQLi, XSS, …) to pass as `tests`. |
+| `listRepeaters` | Check whether a repeater is connected for private targets. |
+| `createRepeater` | Create a repeater; response includes CLI args to start it. |
+| `deleteRepeater` | Delete a repeater (irreversible). |
+
+## Notes
+
+- `entrypointStatuses` is the fastest way to scope a scan in the coding loop: `["new","changed"]`
+  for iterative feedback, `["vulnerable"]` to re-verify fixes.
+- Deletion tools (`deleteEntrypoint`, `deleteAuth`, `deleteRepeater`) are irreversible — confirm
+  with the user before calling them.

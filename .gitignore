@@ -1,0 +1,10 @@
+# Local settings
+.claude/
+.DS_Store
+
+# Design specs/plans kept locally
+docs/internal/
+
+# Env / secrets — never commit
+.env
+*.local

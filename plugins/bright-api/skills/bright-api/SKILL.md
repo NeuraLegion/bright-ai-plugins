@@ -1,0 +1,59 @@
+---
+name: bright-api
+version: 0.1.0
+description: >
+  Query the Bright platform for security posture reporting, vulnerability
+  analysis, and scan history — read-only. Use when the user asks about their
+  security posture, "show me findings", "what vulnerabilities do we have",
+  "which projects need attention", "what changed since the last scan", scan
+  history, or an org/project security summary. Prefers the Bright MCP server
+  tools (listProjects, listScans, listVulnerabilities, listScanVulnerabilities,
+  listEntrypoints); the Bright app and REST API are alternatives. Do NOT use
+  for running scans or fixing vulnerabilities (use the bright-scan skill),
+  configuring authentication (bright-auth), or wiring CI (bright-ci) — this
+  skill only reads and reports platform data.
+---
+
+# Bright API / Reporting Skill
+
+Read-only reporting over the Bright platform. This skill never starts scans, edits entrypoints, or
+changes configuration — it answers questions about what Bright already knows.
+
+## Prerequisites
+
+- `BRIGHT_TOKEN` set in the environment (personal or org API key with read scopes, e.g. `scans:read`).
+- Bright MCP server connected (preferred), or access to the Bright app / REST API.
+
+## Workflow
+
+```
+Question → Authenticate → Query platform → Present results → Suggest next actions
+```
+
+1. **Resolve scope.** If the user names a project, resolve its ID with `listProjects`. Otherwise
+   report across all accessible projects.
+2. **Query.** Pick the smallest set of read tools that answers the question (see recipes in
+   `references/reporting-recipes.md`).
+3. **Present.** Summarize as a compact table ordered by severity. Include counts, not raw dumps.
+4. **Suggest next actions.** Point to `bright-scan` to fix, `bright-auth` if coverage is blocked by
+   auth, or `bright-ci` to prevent regressions.
+
+## Common questions → tools
+
+| Ask | Tool(s) |
+|-----|---------|
+| "What projects do we have?" | `listProjects` |
+| "What's our posture?" | `listVulnerabilities` per project → aggregate by severity |
+| "Show findings for project X" | `listScans` → latest scan → `listScanVulnerabilities` → `getScanVulnerability` |
+| "What changed since the last scan?" | `listScans` (last two) → diff their `listScanVulnerabilities` |
+| "Which projects are stale?" | `listScans` per project → flag none in 30+ days |
+| "What endpoints are known?" | `listEntrypoints` |
+| "Why did the scan under-cover?" | `getScanWarnings` / `getScanLogs` |
+
+Full tool reference: see the `bright-scan` skill's `references/mcp-tools.md`.
+
+## Presentation guidance
+
+- Lead with the headline number (e.g. "7 untriaged: 2 critical, 3 high, 2 medium").
+- Group by severity, then project. Never paste raw JSON unless asked.
+- For a single finding, give type, severity, affected entrypoint, and one-line remediation.

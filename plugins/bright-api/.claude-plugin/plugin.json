@@ -1,0 +1,21 @@
+{
+  "name": "bright-api",
+  "version": "0.1.0",
+  "description": "Query the Bright platform for security posture reporting, vulnerability analysis, scan history, and project/entrypoint management. Read-only reporting across all your projects.",
+  "author": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com",
+    "url": "https://brightsec.com"
+  },
+  "homepage": "https://docs.brightsec.com",
+  "repository": "https://github.com/NeuraLegion/bright-agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "dast",
+    "appsec",
+    "bright",
+    "brightsec",
+    "reporting"
+  ]
+}

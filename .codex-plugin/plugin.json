@@ -1,0 +1,23 @@
+{
+  "name": "brightsec",
+  "version": "0.1.0",
+  "description": "Dynamic application and API security testing (DAST) powered by Bright. Discover entrypoints, run scans, interpret vulnerabilities, and query the Bright platform.",
+  "author": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com",
+    "url": "https://brightsec.com"
+  },
+  "homepage": "https://docs.brightsec.com",
+  "repository": "https://github.com/NeuraLegion/bright-agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "dast",
+    "appsec",
+    "bright",
+    "brightsec",
+    "api-security",
+    "vulnerability-scanning"
+  ],
+  "skills": "./skills/"
+}

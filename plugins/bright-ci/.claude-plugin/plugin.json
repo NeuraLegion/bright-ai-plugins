@@ -1,0 +1,21 @@
+{
+  "name": "bright-ci",
+  "version": "0.1.0",
+  "description": "Wire Bright DAST into your CI/CD pipeline. Provider-agnostic: detects GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines, and more, edits the pipeline file in place with a Bright CLI scan job, and prompts for BRIGHT_TOKEN storage.",
+  "author": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com",
+    "url": "https://brightsec.com"
+  },
+  "homepage": "https://docs.brightsec.com",
+  "repository": "https://github.com/NeuraLegion/bright-agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "dast",
+    "appsec",
+    "bright",
+    "brightsec",
+    "ci-cd"
+  ]
+}
