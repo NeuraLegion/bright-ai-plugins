@@ -65,61 +65,169 @@ export BRIGHT_TOKEN=<your-api-key>
 
 ### 2. Install for your platform
 
-#### Claude Code
+Pick your AI coding tool below. Every install is one of three shapes: a **plugin marketplace**
+(Claude, Codex), a **native extension install** (Gemini), or **copy files into a discovery folder**
+(Copilot, OpenCode, Cursor — handled by `scripts/install.sh`).
+
+<details open>
+<summary><strong>Claude Code</strong></summary>
+
+Add the marketplace (Claude reads `.claude-plugin/marketplace.json` from the repo root), then
+install the umbrella plugin:
+
 ```
 /plugin marketplace add NeuraLegion/bright-agent-skills
-/plugin install bright@brightsec        # installs bright-scan + api + auth + ci
+/plugin install bright@brightsec
 ```
-Advanced — install individually: `/plugin install bright-scan@brightsec` (and `bright-api`,
-`bright-auth`, `bright-ci`, `bright-lab`).
 
-#### Codex
+`bright@brightsec` installs `bright-scan` + `bright-api` + `bright-auth` + `bright-ci`. Install
+individual skills instead:
+
+```
+/plugin install bright-scan@brightsec
+/plugin install bright-api@brightsec
+/plugin install bright-auth@brightsec
+/plugin install bright-ci@brightsec
+/plugin install bright-lab@brightsec
+```
+
+Manage with `/plugin` (list, enable/disable, update). To test before pushing to GitHub, point the
+marketplace at a local clone: `/plugin marketplace add /path/to/bright-agent-skills`.
+
+</details>
+
+<details>
+<summary><strong>Codex</strong></summary>
+
 ```
 /plugin marketplace add NeuraLegion/bright-agent-skills
 /plugin install bright-scan@brightsec
 /plugin install bright-api@brightsec
 /plugin install bright-auth@brightsec
 /plugin install bright-ci@brightsec
+/plugin install bright-lab@brightsec
 ```
 
-#### Gemini CLI
+If your Codex version supports umbrella dependency auto-install, `/plugin install bright@brightsec`
+installs the default set in one command.
+
+</details>
+
+<details>
+<summary><strong>Gemini CLI</strong></summary>
+
+Install straight from the GitHub URL:
+
 ```bash
 gemini extensions install https://github.com/NeuraLegion/bright-agent-skills
 ```
 
-#### GitHub Copilot
+Gemini reads `gemini-extension.json` and discovers skills under `skills/`. Update later with
+`gemini extensions update brightsec`.
+
+</details>
+
+<details>
+<summary><strong>GitHub Copilot</strong></summary>
+
+Clone and copy the skills into the Copilot discovery folder (`-L` dereferences the repo's internal
+symlinks so the copies are standalone):
+
 ```bash
 git clone https://github.com/NeuraLegion/bright-agent-skills.git
 bash bright-agent-skills/scripts/install.sh --platform copilot --target .
 ```
-Installs skills into `.agents/skills/`. Confirm they appear under **GitHub Copilot → Configure
-Skills** in VS Code.
 
-#### OpenCode
+This installs the five skills into `.agents/skills/`. Confirm they appear under **GitHub Copilot →
+Configure Skills** in VS Code. For a global install available to all repos, target your home
+directory: `--target ~`.
+
+</details>
+
+<details>
+<summary><strong>OpenCode</strong></summary>
+
 Skills are auto-discovered from `.opencode/skills/`. Clone and copy (`-L` dereferences the repo's
-internal skill symlinks so the copies work standalone):
+internal symlinks):
+
 ```bash
 git clone https://github.com/NeuraLegion/bright-agent-skills.git
+
+# Project-local (this repo only):
 mkdir -p .opencode/skills
 cp -rL bright-agent-skills/.opencode/skills/* .opencode/skills/
+
+# Global (all projects):
+mkdir -p ~/.config/opencode/skills
+cp -rL bright-agent-skills/.opencode/skills/* ~/.config/opencode/skills/
 ```
 
-#### Cursor
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+The installer copies generated rules (`.cursor/rules/`) and native skills (`.cursor/skills/`) into
+your project:
+
 ```bash
 git clone https://github.com/NeuraLegion/bright-agent-skills.git
 bash bright-agent-skills/scripts/install.sh --platform cursor --target .
 ```
-Installs Cursor rules (`.cursor/rules/`) and skills (`.cursor/skills/`).
 
-### 3. Connect a runtime
-Either configure the **Bright MCP server** (endpoint `https://app.brightsec.com/mcp`, authenticated
-with `BRIGHT_TOKEN`) or install the **Bright CLI** (`npm install @brightsec/cli -g`). The `bright-scan`
-skill prefers MCP and falls back to the CLI.
+```powershell
+# Windows: run the equivalent copy steps, or use WSL/Git Bash to run install.sh
+```
+
+For a global install available to every project, target your home directory: `--target ~`.
+
+</details>
+
+### 3. Connect a runtime (required)
+
+The skills teach your agent *how* to use Bright — they still need Bright itself. Set your key once:
+
+```bash
+export BRIGHT_TOKEN=<your-api-key>   # scopes: bot, scans:run, scans:read
+```
+
+Then pick **one** runtime. `bright-scan` prefers MCP and falls back to the CLI.
+
+**Option A — Bright MCP server (recommended for agentic use).** Point your MCP client at the Bright
+endpoint (default `https://app.brightsec.com/mcp`, adjust for your cluster) and authenticate with
+your API key. Typical client config:
+
+```jsonc
+{
+  "mcpServers": {
+    "brightsec": {
+      "type": "http",
+      "url": "https://app.brightsec.com/mcp",
+      "headers": { "Authorization": "Bearer ${BRIGHT_TOKEN}" }
+    }
+  }
+}
+```
+
+Client-specific setup: [VSCode](https://docs.brightsec.com/docs/configure-in-vscode) ·
+[Augment Code](https://docs.brightsec.com/docs/configure-bright-mcp-in-augment-code) ·
+[MCP tools reference](https://docs.brightsec.com/docs/bright-mcp-tools). MCP config file locations
+differ per tool (e.g. Cursor `.cursor/mcp.json`, Claude Code `~/.claude.json` / project config).
+
+**Option B — Bright CLI.**
+
+```bash
+npm install @brightsec/cli -g
+bright-cli --version
+```
+
+For local/private targets, register and activate a [Repeater](https://docs.brightsec.com/docs/on-premises-repeater-local-agent).
 
 ### 4. Try it
 ```
 > "Scan my API for security vulnerabilities"
 > "What's my security posture across all projects?"
+> "Set up Bright in my GitHub Actions pipeline"
 ```
 
 ---
