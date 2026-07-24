@@ -1,0 +1,23 @@
+{
+  "name": "bright-security",
+  "displayName": "Bright Security",
+  "version": "1.0.0",
+  "description": "Bright DAST scanning and remediation automation for Cursor using the Bright MCP server.",
+  "author": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "cursor",
+    "bright",
+    "dast",
+    "security",
+    "mcp"
+  ],
+  "logo": "assets/logo.svg",
+  "agents": "agents",
+  "skills": "skills",
+  "hooks": "hooks/hooks.json",
+  "mcpServers": "mcp.json"
+}

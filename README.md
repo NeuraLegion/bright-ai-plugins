@@ -17,6 +17,7 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
 
 | Tool | Folder | Agents | Skills | MCP config | Safety hook |
 |------|--------|--------|--------|------------|-------------|
+| Cursor | [`cursor/`](./cursor/) | `agents/*.md` | `skills/*/SKILL.md` | `mcp.json` | `hooks/hooks.json` (beforeShellExecution) |
 | Claude Code | [`claude-code/`](./claude-code/) | `agents/*.md` | `skills/*/SKILL.md` | `.mcp.json` | `hooks/hooks.json` (PreToolUse) |
 | Codex | [`codex/`](./codex/) | as skills* | `skills/*/SKILL.md` | `.mcp.json` | `hooks/hooks.json` (PreToolUse) |
 | OpenCode | [`opencode/`](./opencode/) | `.opencode/agent/*.md` | `.opencode/skills/*/SKILL.md` | `opencode.json` | — |
@@ -26,8 +27,7 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
 \* Codex has no separate agent type — the two orchestration workflows ship as skills.
 \*\* Gemini CLI has no agent/skill runtime — `GEMINI.md` drives the workflows and references the bundled markdown.
 
-The canonical Cursor package lives in its own repo (`bright-cursor-plugin`); it is the source
-these packages mirror.
+The `cursor/` package is the canonical source the other packages mirror.
 
 ## Required environment (all packages)
 - `BRIGHT_HOSTNAME` — Bright cluster hostname (e.g. `app.brightsec.com`)
