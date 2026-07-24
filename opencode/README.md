@@ -25,4 +25,5 @@ through `{env:...}` substitution.
 
 ## Use
 Select the `bright-application-testing` or `bright-remediation-loop` agent, or let OpenCode
-load the step skills on demand. Scans target `localhost` only.
+load the step skills on demand. Scan any target you own or are authorized to test (local,
+staging, or another authorized environment); private/local targets go through a Repeater.

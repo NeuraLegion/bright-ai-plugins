@@ -1,19 +1,20 @@
 ---
 name: setup-repeater
-description: Select a Bright project, create or reuse a Repeater, and connect it to the application target in the current execution environment.
+description: Select a Bright project and, for private or local targets, create or reuse a Repeater and connect it to the application under test.
 ---
 
 ## Setup Bright Project and Repeater
 
 ### Preconditions
 
-Before starting the Repeater, require `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`.
-Both are used by `mcp.json` (MCP URL and auth header) and by the Bright CLI Repeater.
-If either is missing, stop and ask the user to provide it.
+Before starting a Repeater, require `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`.
+Both are used by the MCP config (URL and auth header) and by the Bright CLI Repeater.
+If either is missing, stop and ask the user to provide it. Expect them from the environment's
+secret store (CI/cloud secrets) or the local shell environment.
 
-When running in Cursor Cloud Agents, expect both variables to come from Cloud Agent
-secrets. When running in desktop Cursor, expect them from the user's shell or system
-environment.
+A Repeater is required only for **private or local** targets. A publicly reachable target
+(e.g. a public staging URL) can be scanned directly — skip to project selection and pass no
+`repeaters` to the scan.
 
 ### Step 1: Select the Bright project
 
@@ -21,15 +22,16 @@ environment.
 2. Prefer the project whose name matches the repository or application name.
 3. Otherwise use the closest match or the first available project.
 
-### Step 2: Create or reuse a Repeater
+### Step 2: Create or reuse a Repeater (private/local targets)
 
 1. Call `listRepeaters` for the project.
-2. Reuse a healthy Repeater that is clearly scoped to this repository when possible.
-3. Otherwise create a new one with a descriptive name such as `cursor-bright-<repo-name>`.
+2. Reuse a healthy Repeater that is clearly scoped to this application when possible.
+3. Otherwise create one with `createRepeater`, using a descriptive name such as `bright-<repo-name>`.
 
-### Step 3: Start the Repeater in the current execution environment
+### Step 3: Start the Repeater
 
-Use the same hostname and token as MCP to start the Bright CLI Repeater:
+Use the same hostname and token as MCP to start the Bright CLI Repeater in the environment
+that can reach the target:
 
 ```bash
 npx @brightsec/cli repeater --id <REPEATER_ID> --hostname "$BRIGHT_HOSTNAME" --token "$BRIGHT_TOKEN"
@@ -52,5 +54,5 @@ npm install -g @brightsec/cli
 Return:
 - `projectId`
 - `projectName`
-- `repeaterId`
+- `repeaterId` (or note that the target is public and no Repeater is needed)
 - whether the Repeater was reused or created for this run

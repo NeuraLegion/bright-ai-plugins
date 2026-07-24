@@ -1,6 +1,6 @@
 ---
 name: register-entrypoints
-description: Register safe local endpoints in Bright with realistic requests and working auth configuration.
+description: Register safe endpoints in Bright with realistic requests and working auth configuration.
 ---
 
 ## Register Entrypoints
@@ -19,16 +19,17 @@ expects richer input.
 
 ### Step 2: Register the endpoint in Bright
 
-Call `addEntrypoint` with:
+First call `listEntrypoints` and reuse a matching existing entrypoint to avoid duplicates.
+Otherwise call `addEntrypoint` with:
 - `projectId`
-- `repeaterId`
+- `repeaterId` when the target is private/local
 - `authObjectId` when auth is required
 - `request` with method, URL, headers, and body
 
 ### Step 3: Decide whether discovery is better
 
 If the safe route surface is large, generated, or hard to enumerate manually, switch to
-`runDiscovery` with the same local base URL and active Repeater.
+`runDiscovery` with the same base URL and, for private/local targets, the active Repeater.
 
 ### Step 4: Prune bad registrations
 

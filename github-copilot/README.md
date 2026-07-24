@@ -22,13 +22,14 @@ under **GitHub Copilot → Configure Skills** in VS Code).
 Add these to the repository's **`copilot`** GitHub Actions environment (repo/org secrets are
 not visible to Copilot agents):
 
-- `BRIGHT_TOKEN` — Bright API token (used by the Bright MCP server; referenced as `${{ secrets.BRIGHT_TOKEN }}` in agent frontmatter)
-- `BRIGHT_HOSTNAME` — Bright cluster hostname, e.g. `app.brightsec.com`
+- `BRIGHT_TOKEN` — Bright API token, a **secret** (referenced as `${{ secrets.BRIGHT_TOKEN }}` in agent frontmatter)
 
-Allowlist your Bright hostname under **Copilot → Cloud agent → Internet access → Custom
-allowlist**.
+Also add a repository/organization **variable** `BRIGHT_HOSTNAME` (e.g. `app.brightsec.com`),
+referenced as `${{ vars.BRIGHT_HOSTNAME }}` in the agent frontmatter. Allowlist your Bright
+hostname under **Copilot → Cloud agent → Internet access → Custom allowlist**.
 
 ## Notes
-- The agent frontmatter hardcodes `https://app.brightsec.com/mcp`. For a self-hosted/private
-  cluster, edit the `url` in each agent to your `BRIGHT_HOSTNAME`.
-- Scans target `localhost` in the agent's execution environment only.
+- The agent frontmatter builds the MCP URL from `${{ vars.BRIGHT_HOSTNAME }}`, so self-hosted
+  and private clusters work by setting that variable — no need to edit the agent files.
+- Only scan targets you own or are authorized to test (local, staging, or another authorized
+  environment).

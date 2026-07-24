@@ -1,20 +1,22 @@
 # Bright Security — Gemini CLI context
 
 You can run Bright Dynamic Application Security Testing (DAST) through the `brightsec` MCP
-server (tools like `listProjects`, `listRepeaters`, `addAuth`, `addEntrypoint`, `listTests`,
-`runScan`, `getScanStatus`, `listIssues`). Gemini CLI has no separate agent/skill runtime, so
+server (tools like `listProjects`, `listRepeaters`, `createRepeater`, `addAuth`, `testAuth`,
+`addEntrypoint`, `listEntrypoints`, `listTests`, `runScan`, `getScanStatus`,
+`listScanVulnerabilities`, `getScanVulnerability`). Gemini CLI has no separate agent/skill runtime, so
 this context file drives the same workflows the Cursor plugin ships. The full step-by-step
 instructions live in the bundled markdown under `agents/` and `skills/` — read the relevant
 file before executing a phase.
 
-## Safety (non-negotiable)
-- Scan `localhost` targets only, in the current execution environment. Never target
-  production, staging, or third-party URLs.
+## Safety
+- Only scan targets the user owns or is explicitly authorized to test (local, staging, or any
+  authorized environment). If the target isn't obviously the user's, confirm authorization first.
+- Reach private/local targets through a Bright Repeater; a public target can be scanned directly.
 - Require `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN` before any Bright operation. Both are used by
   the MCP server and the Bright CLI Repeater.
 - Do not fuzz destructive endpoints (all `DELETE`, credential/identity mutation, or bodies
   containing `password`/`newPassword`/`passwd`).
-- Always pass `repeaters` as an array when launching scans or discovery.
+- Always pass `repeaters` as an array when launching scans or discovery against private/local targets.
 
 ## Workflow: application testing
 Follow `agents/bright-application-testing.md`, using these skills in order:

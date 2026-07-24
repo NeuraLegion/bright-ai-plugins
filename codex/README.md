@@ -32,7 +32,7 @@ url = "https://app.brightsec.com/mcp"
 http_headers = { Authorization = "Api-Key ${BRIGHT_TOKEN}" }
 ```
 
-## Safety hook
-`hooks/hooks.json` runs a `PreToolUse` guard (`scripts/validate-no-production-targets.sh`)
-that blocks Bright scans/HTTP calls against anything other than localhost or `*.brightsec.com`.
-Codex-bundled hooks require explicit trust on first use.
+## Safety
+Only scan targets you own or are authorized to test (local, staging, or another authorized
+environment). Reach private/local targets through a Bright Repeater; public targets can be
+scanned directly.

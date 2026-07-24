@@ -13,7 +13,6 @@
   "keywords": ["codex", "bright", "dast", "security", "mcp"],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
-  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Bright Security",
     "shortDescription": "Bright DAST scanning and remediation",

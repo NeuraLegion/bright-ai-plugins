@@ -22,7 +22,7 @@ Bright Security plugin for Cursor.
 
 - `BRIGHT_HOSTNAME`: Bright cluster hostname (for example `app.brightsec.com`).
 - `BRIGHT_TOKEN`: Bright API token for MCP requests and the Bright CLI Repeater.
-- A runnable application target in the current execution environment. The plugin scans `localhost` in that environment.
+- An application target you own or are authorized to test (a local dev server, a staging/QA environment, or another authorized host). Private/local targets are reached through a Bright Repeater.
 
 ## Cloud-first prerequisites
 
