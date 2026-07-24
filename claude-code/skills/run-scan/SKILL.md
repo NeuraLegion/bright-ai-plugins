@@ -7,14 +7,14 @@ description: Select Bright security tests, run scans against registered entrypoi
 
 ### Step 1: Select the test set
 
-Call `listTests` and map endpoint characteristics to the smallest useful Bright test set.
+Call `listTests` (the source of truth for tag identifiers) and map endpoint characteristics to the smallest useful Bright test set.
 
 Suggested mapping:
 
 | Endpoint characteristic | Bright test tags |
 |------------------------|------------------|
-| User input in body or query | `xss`, `stored_xss`, `sqli`, `nosql` |
-| Path or URL parameters | `lfi`, `ssrf`, `open_redirect` |
+| User input in body or query | `xss`, `stored_xss`, `sqli` |
+| Path or URL parameters | `lfi`, `ssrf`, `unvalidated_redirect` |
 | File upload | `file_upload` |
 | Template rendering | `ssti` |
 | Command execution | `osi` |
@@ -48,7 +48,7 @@ Call `runScan` with:
 
 1. Poll `getScanStatus` until every scan finishes.
 2. If a scan fails, verify the local app and auth flow before retrying.
-3. Fetch issues with `listIssues`.
+3. Fetch findings with `listScanVulnerabilities` (per scan); get full detail for a finding with `getScanVulnerability`.
 
 ### Output
 
