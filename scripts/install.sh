@@ -32,7 +32,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -z "$platform" ] || [ -z "$target" ] && usage
+if [ -z "$platform" ] || [ -z "$target" ]; then
+  usage
+fi
 
 if [ ! -d "$target" ]; then
   echo "ERROR: Target directory does not exist: ${target}" >&2
