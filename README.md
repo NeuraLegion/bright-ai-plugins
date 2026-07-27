@@ -40,6 +40,17 @@ export BRIGHT_TOKEN="your-bright-api-token"
 
 Each package's `README.md` has the tool-specific install steps.
 
+### Install in Cursor (marketplace)
+
+The repo root ships a `.cursor-plugin/marketplace.json`, so Cursor installs it the normal way:
+
+```bash
+cursor-agent plugin marketplace add https://github.com/NeuraLegion/bright-ai-plugins
+```
+
+Then install **Bright Security** via `/plugins` in the interactive Cursor agent, or from
+**Cursor IDE → Customize → Plugins → brightsec**.
+
 ## Safety
 Only scan targets you own or are explicitly authorized to test — a local dev server, a
 staging/QA environment, or any host you're authorized to assess. The agents ask for

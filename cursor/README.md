@@ -25,6 +25,23 @@ Bright Security plugin for Cursor.
 - `BRIGHT_TOKEN`: Bright API token for MCP requests and the Bright CLI Repeater.
 - An application target you own or are authorized to test (a local dev server, a staging/QA environment, or another authorized host). Private/local targets are reached through a Bright Repeater.
 
+## Install
+
+This plugin is published through the `brightsec` Cursor marketplace at the repository root, so
+you install it the normal way:
+
+```bash
+# 1. Add the marketplace (once)
+cursor-agent plugin marketplace add https://github.com/NeuraLegion/bright-ai-plugins
+# (SSH also works: git@github.com:NeuraLegion/bright-ai-plugins.git)
+
+# 2. Install the plugin
+#    - Interactive Cursor agent: run  /plugins  and pick "bright-security"
+#    - Cursor IDE: Customize → Plugins → brightsec → install "Bright Security"
+```
+
+Update later with `cursor-agent plugin marketplace update brightsec`.
+
 ## Setup
 
 Run the plugin in desktop Cursor or in Cursor Cloud Agents — both are first-class. Pick the
