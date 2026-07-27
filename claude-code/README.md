@@ -17,14 +17,18 @@ export BRIGHT_TOKEN="your-bright-api-token"
 ```
 
 ## Install
-Copy this directory into your project as a Claude Code plugin, or reference it from a
-marketplace. For a quick local install, point Claude at the directory:
+The repository root ships a `.claude-plugin/marketplace.json`, so Claude Code installs this
+plugin natively:
 
 ```bash
-claude --plugin-dir /path/to/bright-ai-plugins/claude-code
+claude plugin marketplace add NeuraLegion/bright-ai-plugins
+claude plugin install bright-security@brightsec
 ```
 
+(Or interactively: `/plugin marketplace add NeuraLegion/bright-ai-plugins`, then `/plugin`.)
+
 Then confirm the Bright MCP server is connected and the agents appear with `/agents`.
+Inspect what got installed with `claude plugin details bright-security@brightsec`.
 
 ## Use
 ```

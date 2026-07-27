@@ -1,0 +1,16 @@
+{
+  "name": "brightsec",
+  "interface": {
+    "displayName": "Bright Security"
+  },
+  "plugins": [
+    {
+      "name": "bright-security",
+      "source": {
+        "source": "local",
+        "path": "./codex"
+      },
+      "category": "Security"
+    }
+  ]
+}

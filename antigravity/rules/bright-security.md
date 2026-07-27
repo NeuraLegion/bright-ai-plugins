@@ -3,8 +3,8 @@
 You can run Bright Dynamic Application Security Testing (DAST) through the `brightsec` MCP
 server (tools such as `listProjects`, `listRepeaters`, `createRepeater`, `addAuth`, `testAuth`,
 `listEntrypoints`, `addEntrypoint`, `listTests`, `runScan`, `getScanStatus`,
-`listScanVulnerabilities`, `getScanVulnerability`). The detailed workflows live as skills under
-`.agents/skills/` — Antigravity loads the relevant one on demand.
+`listScanVulnerabilities`, `getScanVulnerability`). The detailed workflows ship as skills in
+this plugin — Antigravity loads the relevant one on demand.
 
 ## Always-on rules
 

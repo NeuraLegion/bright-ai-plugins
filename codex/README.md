@@ -13,20 +13,22 @@ alongside the six step skills:
 - `BRIGHT_TOKEN` — Bright API token
 
 ## Install
-Add this folder as a plugin via a Codex marketplace entry, then install from the Plugins
-Directory. For local development:
+The repository root ships a Codex marketplace manifest (`.agents/plugins/marketplace.json`),
+so Codex installs this plugin natively:
 
 ```bash
-codex plugin marketplace add ./   # from a marketplace root that lists this plugin
+codex plugin marketplace add NeuraLegion/bright-ai-plugins
+codex plugin add bright-security@brightsec
 ```
 
-See the Codex docs for marketplace wiring (`.agents/plugins/marketplace.json`).
+Verify with `codex plugin list` and `codex mcp list` (the `brightsec` server should appear
+with `BRIGHT_TOKEN` as its bearer token env var).
 
 ## MCP
-`.mcp.json` declares the Bright MCP server over streamable HTTP. Codex does **not** interpolate
+`.mcp.json` bundles the Bright MCP server over streamable HTTP. Codex does **not** interpolate
 `${VAR}` inside config values, so the token is wired through Codex's env mechanism
 (`bearer_token_env_var`) and the URL is a literal. Bright MCP accepts both `Bearer` and
-`Api-Key` schemes, so `bearer_token_env_var = "BRIGHT_TOKEN"` authenticates cleanly.
+`Api-Key` schemes, so `"bearer_token_env_var": "BRIGHT_TOKEN"` authenticates cleanly.
 
 ```json
 {
@@ -40,16 +42,12 @@ See the Codex docs for marketplace wiring (`.agents/plugins/marketplace.json`).
 ```
 
 - Export your token as `BRIGHT_TOKEN` in the environment Codex runs in.
-- **Self-hosted / non-default cluster:** edit `url` to `https://<your-BRIGHT_HOSTNAME>/mcp`
-  (Codex can't expand `${BRIGHT_HOSTNAME}` here).
+- **Self-hosted / non-default cluster:** the bundled URL is the default cloud cluster.
+  Override it natively:
 
-Equivalent `~/.codex/config.toml` if you prefer host-level config over the bundled plugin:
-
-```toml
-[mcp_servers.brightsec]
-url = "https://app.brightsec.com/mcp"
-bearer_token_env_var = "BRIGHT_TOKEN"
-```
+  ```bash
+  codex mcp add brightsec --url "https://$BRIGHT_HOSTNAME/mcp" --bearer-token-env-var BRIGHT_TOKEN
+  ```
 
 ## Safety
 Only scan targets you own or are authorized to test (local, staging, or another authorized

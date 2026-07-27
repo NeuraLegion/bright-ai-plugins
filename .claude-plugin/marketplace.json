@@ -1,0 +1,18 @@
+{
+  "name": "brightsec",
+  "owner": {
+    "name": "Bright Security",
+    "email": "support@brightsec.com"
+  },
+  "metadata": {
+    "description": "Bright Security DAST agents and skills — scan, triage, and remediate application and API vulnerabilities via the Bright MCP server.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "bright-security",
+      "source": "./claude-code",
+      "description": "Bright DAST scanning and remediation for Claude Code: analyze the app, run scans through a Repeater, and fix findings via the Bright MCP server."
+    }
+  ]
+}

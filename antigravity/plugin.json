@@ -1,0 +1,5 @@
+{
+  "name": "bright-security",
+  "version": "1.0.0",
+  "description": "Bright DAST scanning and remediation automation for Antigravity CLI using the Bright MCP server."
+}

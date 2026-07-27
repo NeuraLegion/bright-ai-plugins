@@ -1,7 +1,8 @@
 # Bright AI Plugins
 
-Bright Security DAST agents and skills, packaged for every major AI coding tool: Cursor,
-Claude Code, Codex, OpenCode, GitHub Copilot, and Antigravity CLI.
+Bright Security DAST agents and skills, installable the **native way** into every major AI
+coding tool from this single repository: Cursor, Claude Code, Codex, GitHub Copilot,
+OpenCode, and Antigravity CLI.
 
 Every package wires the **same two agents** and **six skills** to the Bright MCP server:
 
@@ -12,6 +13,25 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
 **Skills**
 - `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `run-scan`, `fix-and-validate`
 
+## Install
+
+The repo root carries one marketplace manifest per tool, so each tool installs its own
+package with its own native command:
+
+| Tool | Native install |
+|------|----------------|
+| **Cursor** | `cursor-agent plugin marketplace add https://github.com/NeuraLegion/bright-ai-plugins` then install **bright-security** via `/plugins` (or IDE → Customize → Plugins) |
+| **Claude Code** | `claude plugin marketplace add NeuraLegion/bright-ai-plugins` then `claude plugin install bright-security@brightsec` |
+| **Codex** | `codex plugin marketplace add NeuraLegion/bright-ai-plugins` then `codex plugin add bright-security@brightsec` |
+| **GitHub Copilot CLI** | `copilot plugin marketplace add NeuraLegion/bright-ai-plugins` then `copilot plugin install bright-security@brightsec` (plus one `copilot mcp add` — see [`github-copilot/`](./github-copilot/)) |
+| **Antigravity CLI** | `agy plugin install https://github.com/NeuraLegion/bright-ai-plugins/tree/main/antigravity` |
+| **OpenCode** | clone and copy [`opencode/`](./opencode/) into your project or `~/.config/opencode/` (OpenCode has no git plugin installer — see [`opencode/`](./opencode/)) |
+
+Marketplace manifests at the repo root:
+`.cursor-plugin/marketplace.json` (Cursor), `.claude-plugin/marketplace.json` (Claude Code),
+`.agents/plugins/marketplace.json` (Codex), `.github/plugin/marketplace.json` (Copilot CLI).
+All four index the marketplace name `brightsec` and the plugin name `bright-security`.
+
 ## Packages
 
 | Tool | Folder | Agents | Skills | MCP config |
@@ -19,11 +39,12 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
 | Cursor | [`cursor/`](./cursor/) | `agents/*.md` | `skills/*/SKILL.md` | `mcp.json` |
 | Claude Code | [`claude-code/`](./claude-code/) | `agents/*.md` | `skills/*/SKILL.md` | `.mcp.json` |
 | Codex | [`codex/`](./codex/) | as skills* | `skills/*/SKILL.md` | `.mcp.json` |
+| GitHub Copilot | [`github-copilot/`](./github-copilot/) | `agents/*.agent.md` (CLI), `.github/agents/*.md` (coding agent) | `skills/*/SKILL.md` | `copilot mcp add` / agent frontmatter |
 | OpenCode | [`opencode/`](./opencode/) | `.opencode/agent/*.md` | `.opencode/skills/*/SKILL.md` | `opencode.json` |
-| GitHub Copilot | [`github-copilot/`](./github-copilot/) | `.github/agents/*.md` | `.agents/skills/*/SKILL.md` | agent frontmatter |
-| Antigravity CLI | [`antigravity/`](./antigravity/) | as skills* | `.agents/skills/*/SKILL.md` | `.agents/mcp_config.json` |
+| Antigravity CLI | [`antigravity/`](./antigravity/) | as skills* | `skills/*/SKILL.md` | `mcp_config.json` |
 
-\* Codex and Antigravity CLI have no separate agent type — the two orchestration workflows ship as skills. Antigravity also carries always-on rules in `.agents/AGENTS.md`.
+\* Codex and Antigravity CLI have no separate agent type — the two orchestration workflows
+ship as skills. Antigravity also carries always-on rules in `rules/`.
 
 The `cursor/` package is the canonical source the other packages mirror.
 
@@ -36,18 +57,9 @@ export BRIGHT_HOSTNAME="app.brightsec.com"
 export BRIGHT_TOKEN="your-bright-api-token"
 ```
 
-Each package's `README.md` has the tool-specific install steps.
-
-### Install in Cursor (marketplace)
-
-The repo root ships a `.cursor-plugin/marketplace.json`, so Cursor installs it the normal way:
-
-```bash
-cursor-agent plugin marketplace add https://github.com/NeuraLegion/bright-ai-plugins
-```
-
-Then install **Bright Security** via `/plugins` in the interactive Cursor agent, or from
-**Cursor IDE → Customize → Plugins → brightsec**.
+Each package's `README.md` has the tool-specific install steps and MCP notes (some tools
+expand env vars in MCP config; Codex and Copilot need the token wired differently — the
+package READMEs cover it).
 
 ## Safety
 Only scan targets you own or are explicitly authorized to test — a local dev server, a

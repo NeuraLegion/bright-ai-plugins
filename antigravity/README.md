@@ -1,12 +1,14 @@
 # Bright Security — Antigravity CLI
 
-Bright DAST workflows packaged for Google's **Antigravity CLI** (`agy`), the successor to the
-now-deprecated Gemini CLI.
+Bright DAST workflows packaged as a native plugin for Google's **Antigravity CLI** (`agy`),
+the successor to the now-deprecated Gemini CLI.
 
-Antigravity loads project customizations from a workspace `.agents/` directory:
-- **Rules** — `.agents/AGENTS.md` (always-on constraints + workflow overview)
-- **Skills** — `.agents/skills/<name>/SKILL.md` (loaded on demand)
-- **MCP** — `.agents/mcp_config.json` (Bright MCP server)
+This directory is an Antigravity plugin:
+
+- **`plugin.json`** — plugin manifest (required marker)
+- **Skills** — `skills/<name>/SKILL.md` (loaded on demand)
+- **MCP** — `mcp_config.json` (Bright MCP server)
+- **Rules** — `rules/bright-security.md` (always-on constraints + workflow overview)
 
 Antigravity has no separate "agent" type, so the two orchestration workflows ship as skills
 alongside the six step skills:
@@ -23,24 +25,36 @@ export BRIGHT_HOSTNAME="app.brightsec.com"
 export BRIGHT_TOKEN="your-bright-api-token"
 ```
 
-## Install (workspace)
-Copy the `.agents/` directory into the root of the workspace you want to scan:
+## Install (native)
+
+`agy plugin install` accepts a GitHub URL with a subpath:
 
 ```bash
-cp -R antigravity/.agents  your-project/
+agy plugin install https://github.com/NeuraLegion/bright-ai-plugins/tree/main/antigravity
 ```
 
-Antigravity CLI (`agy`) auto-discovers `.agents/AGENTS.md`, `.agents/skills/`, and the
-workspace MCP config at `.agents/mcp_config.json`.
+Or from a local clone:
 
-For a **global** install (all workspaces), place the same files under `~/.gemini/config/`
-(rules/skills) and add the MCP server to `~/.gemini/antigravity/mcp_config.json`.
+```bash
+git clone https://github.com/NeuraLegion/bright-ai-plugins.git
+agy plugin install ./bright-ai-plugins/antigravity
+```
+
+The plugin lands in `~/.gemini/config/plugins/bright-security/` and its skills and MCP server
+are discovered automatically. Verify with `agy plugin list` (components: `skills`,
+`mcpServers`) and `agy plugin validate ./antigravity` before installing if you've modified it.
 
 ## MCP notes
 Antigravity uses `serverUrl` (not `url`/`httpUrl`) for HTTP-based MCP servers. The bundled
 `mcp_config.json` uses `${BRIGHT_HOSTNAME}` / `${BRIGHT_TOKEN}`; if your Antigravity version
 does not expand environment variables in the MCP config, replace them with literal values
 (and edit `serverUrl` for a self-hosted/non-default cluster).
+
+## Rules note
+`rules/bright-security.md` is copied with the plugin, but `agy plugin list` reports only
+`skills` and `mcpServers` as imported components. If the always-on rules don't take effect in
+your version, copy the file into your workspace rules (e.g. append it to the workspace
+`AGENTS.md`).
 
 ## Use
 ```
