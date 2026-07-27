@@ -1,7 +1,6 @@
 ---
 name: bright-remediation-loop
 description: Run Bright DAST, apply minimal code fixes for confirmed findings, and re-run the same validation scans until the vulnerability disappears or the round limit is reached.
-argument-hint: A repository path, app description, Bright project, or request to scan-fix-retest the application under test.
 ---
 
 # Bright Remediation Loop

@@ -1,7 +1,6 @@
 ---
 name: bright-application-testing
 description: Run Bright Dynamic Application Security Testing against the application under test through the Bright MCP server, reaching private or local targets through a Repeater when needed.
-argument-hint: A repository path, app description, or target URL (local, staging, or any environment you are authorized to test) to analyze and scan.
 ---
 
 # Bright Application Testing

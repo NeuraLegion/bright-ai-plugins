@@ -3,7 +3,6 @@
     "brightsec": {
       "type": "http",
       "url": "https://${env:BRIGHT_HOSTNAME}/mcp",
-      "tools": ["*"],
       "headers": {
         "Authorization": "Api-Key ${env:BRIGHT_TOKEN}"
       }

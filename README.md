@@ -1,7 +1,7 @@
 # Bright AI Plugins
 
 Bright Security DAST agents and skills, packaged for every major AI coding tool: Cursor,
-Claude Code, Codex, OpenCode, GitHub Copilot, and Gemini CLI.
+Claude Code, Codex, OpenCode, GitHub Copilot, and Antigravity CLI.
 
 Every package wires the **same two agents** and **six skills** to the Bright MCP server:
 
@@ -21,10 +21,9 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
 | Codex | [`codex/`](./codex/) | as skills* | `skills/*/SKILL.md` | `.mcp.json` |
 | OpenCode | [`opencode/`](./opencode/) | `.opencode/agent/*.md` | `.opencode/skills/*/SKILL.md` | `opencode.json` |
 | GitHub Copilot | [`github-copilot/`](./github-copilot/) | `.github/agents/*.md` | `.agents/skills/*/SKILL.md` | agent frontmatter |
-| Gemini CLI | [`gemini-cli/`](./gemini-cli/) | bundled (context)** | bundled (context)** | `gemini-extension.json` |
+| Antigravity CLI | [`antigravity/`](./antigravity/) | as skills* | `.agents/skills/*/SKILL.md` | `.agents/mcp_config.json` |
 
-\* Codex has no separate agent type — the two orchestration workflows ship as skills.
-\*\* Gemini CLI has no agent/skill runtime — `GEMINI.md` drives the workflows and references the bundled markdown.
+\* Codex and Antigravity CLI have no separate agent type — the two orchestration workflows ship as skills. Antigravity also carries always-on rules in `.agents/AGENTS.md`.
 
 The `cursor/` package is the canonical source the other packages mirror.
 
