@@ -1,6 +1,6 @@
 # Bright Security — OpenCode plugin
 
-Same Bright DAST agents and skills as the Cursor plugin, packaged for OpenCode.
+Bright DAST agents and skills, packaged for OpenCode.
 
 ## Contents
 - **Agents** (`.opencode/agent/`): `bright-application-testing`, `bright-remediation-loop` (mode: primary)

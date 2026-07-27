@@ -1,6 +1,6 @@
 # Bright Security — Gemini CLI extension
 
-Same Bright DAST workflows as the Cursor plugin, packaged as a Gemini CLI extension.
+Bright DAST workflows, packaged as a Gemini CLI extension.
 
 Gemini CLI has no separate agent/skill runtime, so the workflow is driven by a context file
 (`GEMINI.md`) that references the bundled `agents/` and `skills/` markdown.

@@ -1,8 +1,7 @@
 # Bright AI Plugins
 
-The Bright Security DAST agents and skills — the same set shipped in the
-[Bright Cursor plugin](https://github.com/NeuraLegion/bright-cursor-plugin) — packaged for
-other AI coding tools.
+Bright Security DAST agents and skills, packaged for every major AI coding tool: Cursor,
+Claude Code, Codex, OpenCode, GitHub Copilot, and Gemini CLI.
 
 Every package wires the **same two agents** and **six skills** to the Bright MCP server:
 

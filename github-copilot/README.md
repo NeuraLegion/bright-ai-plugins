@@ -1,7 +1,6 @@
 # Bright Security — GitHub Copilot
 
-Same Bright DAST agents and skills as the Cursor plugin, packaged for GitHub Copilot
-(coding agent).
+Bright DAST agents and skills, packaged for GitHub Copilot (coding agent).
 
 ## Contents
 - **Custom agents** (`.github/agents/`): `bright-application-testing`, `bright-remediation-loop` — each declares the Bright MCP server in its `mcp-servers` frontmatter.

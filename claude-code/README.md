@@ -1,6 +1,6 @@
 # Bright Security — Claude Code plugin
 
-Same Bright DAST agents and skills as the Cursor plugin, packaged for Claude Code.
+Bright DAST agents and skills, packaged for Claude Code.
 
 ## Contents
 - **Agents** (`agents/`): `bright-application-testing`, `bright-remediation-loop`

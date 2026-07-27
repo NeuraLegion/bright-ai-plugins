@@ -1,6 +1,6 @@
 # Bright Security — Codex plugin
 
-Same Bright DAST workflows as the Cursor plugin, packaged for Codex.
+Bright DAST workflows, packaged for Codex.
 
 Codex has no separate "agent" type, so the two orchestration workflows ship as skills
 alongside the six step skills:

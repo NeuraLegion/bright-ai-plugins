@@ -4,7 +4,7 @@ You can run Bright Dynamic Application Security Testing (DAST) through the `brig
 server (tools like `listProjects`, `listRepeaters`, `createRepeater`, `addAuth`, `testAuth`,
 `addEntrypoint`, `listEntrypoints`, `listTests`, `runScan`, `getScanStatus`,
 `listScanVulnerabilities`, `getScanVulnerability`). Gemini CLI has no separate agent/skill runtime, so
-this context file drives the same workflows the Cursor plugin ships. The full step-by-step
+this context file drives the same DAST workflows the other packages ship. The full step-by-step
 instructions live in the bundled markdown under `agents/` and `skills/` — read the relevant
 file before executing a phase.
 
