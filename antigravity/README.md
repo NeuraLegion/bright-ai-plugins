@@ -8,7 +8,10 @@ This directory is an Antigravity plugin:
 - **`plugin.json`** — plugin manifest (required marker)
 - **Skills** — `skills/<name>/SKILL.md` (loaded on demand)
 - **MCP** — `mcp_config.json` (Bright MCP server)
-- **Rules** — `rules/bright-security.md` (always-on constraints + workflow overview)
+
+The always-on safety constraints (authorization, Repeater-for-private, no destructive
+endpoints, `repeaters` as an array) are embedded in the two orchestration skills, so they
+apply whenever a scan/remediation workflow runs.
 
 Antigravity has no separate "agent" type, so the two orchestration workflows ship as skills
 alongside the six step skills:
@@ -49,12 +52,6 @@ Antigravity uses `serverUrl` (not `url`/`httpUrl`) for HTTP-based MCP servers. T
 `mcp_config.json` uses `${BRIGHT_HOSTNAME}` / `${BRIGHT_TOKEN}`; if your Antigravity version
 does not expand environment variables in the MCP config, replace them with literal values
 (and edit `serverUrl` for a self-hosted/non-default cluster).
-
-## Rules note
-`rules/bright-security.md` is copied with the plugin, but `agy plugin list` reports only
-`skills` and `mcpServers` as imported components. If the always-on rules don't take effect in
-your version, copy the file into your workspace rules (e.g. append it to the workspace
-`AGENTS.md`).
 
 ## Use
 ```

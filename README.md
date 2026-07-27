@@ -44,7 +44,7 @@ All four index the marketplace name `brightsec` and the plugin name `bright-secu
 | Antigravity CLI | [`antigravity/`](./antigravity/) | as skills* | `skills/*/SKILL.md` | `mcp_config.json` |
 
 \* Codex and Antigravity CLI have no separate agent type — the two orchestration workflows
-ship as skills. Antigravity also carries always-on rules in `rules/`.
+ship as skills.
 
 The `cursor/` package is the canonical source the other packages mirror.
 
