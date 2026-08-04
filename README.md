@@ -2,7 +2,7 @@
 
 Bright Security DAST agents and skills, installable the **native way** into every major AI
 coding tool from this single repository: Cursor, Claude Code, Codex, GitHub Copilot,
-OpenCode, and Antigravity CLI.
+and Antigravity CLI.
 
 Every package wires the **same two agents** and **six skills** to the Bright MCP server:
 
@@ -25,7 +25,6 @@ package with its own native command:
 | **Codex** | `codex plugin marketplace add NeuraLegion/bright-ai-plugins` then `codex plugin add bright-security@brightsec` |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add NeuraLegion/bright-ai-plugins` then `copilot plugin install bright-security@brightsec` (plus one `copilot mcp add` — see [`github-copilot/`](./github-copilot/)) |
 | **Antigravity CLI** | `agy plugin install https://github.com/NeuraLegion/bright-ai-plugins/tree/main/antigravity` |
-| **OpenCode** | clone and copy [`opencode/`](./opencode/) into your project or `~/.config/opencode/` (OpenCode has no git plugin installer — see [`opencode/`](./opencode/)) |
 
 Marketplace manifests at the repo root:
 `.cursor-plugin/marketplace.json` (Cursor), `.claude-plugin/marketplace.json` (Claude Code),
@@ -40,7 +39,6 @@ All four index the marketplace name `brightsec` and the plugin name `bright-secu
 | Claude Code | [`claude-code/`](./claude-code/) | `agents/*.md` | `skills/*/SKILL.md` | `.mcp.json` |
 | Codex | [`codex/`](./codex/) | as skills* | `skills/*/SKILL.md` | `.mcp.json` |
 | GitHub Copilot | [`github-copilot/`](./github-copilot/) | `agents/*.agent.md` (CLI), `.github/agents/*.md` (coding agent) | `skills/*/SKILL.md` | `copilot mcp add` / agent frontmatter |
-| OpenCode | [`opencode/`](./opencode/) | `.opencode/agent/*.md` | `.opencode/skills/*/SKILL.md` | `opencode.json` |
 | Antigravity CLI | [`antigravity/`](./antigravity/) | as skills* | `skills/*/SKILL.md` | `mcp_config.json` |
 
 \* Codex and Antigravity CLI have no separate agent type — the two orchestration workflows
