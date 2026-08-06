@@ -7,44 +7,33 @@ and Antigravity CLI.
 Every package wires the **same two agents** and **six skills** to the Bright MCP server:
 
 **Agents**
-- `bright-application-testing` — analyze the repo, reach the target (local, staging, or any authorized environment), configure Bright, register attack surface, and run DAST scans (through a Repeater for private/local targets).
-- `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run the same validation scans until findings are gone.
+- `bright-application-testing` — analyze the repo, reach the target (local, staging, or any
+  authorized environment), configure Bright, register attack surface, and run DAST scans
+  (through a Repeater for private/local targets).
+- `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run the same
+  validation scans until findings are gone.
 
 **Skills**
 - `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `run-scan`, `fix-and-validate`
 
-## Install
-
-The repo root carries one marketplace manifest per tool, so each tool installs its own
-package with its own native command:
-
-| Tool | Native install |
-|------|----------------|
-| **Cursor** | `cursor-agent plugin marketplace add https://github.com/NeuraLegion/bright-ai-plugins` then install **bright-security** via `/plugins` (or IDE → Customize → Plugins) |
-| **Claude Code** | `claude plugin marketplace add NeuraLegion/bright-ai-plugins` then `claude plugin install bright-security@brightsec` |
-| **Codex** | `codex plugin marketplace add NeuraLegion/bright-ai-plugins` then `codex plugin add bright-security@brightsec` |
-| **GitHub Copilot CLI** | `copilot plugin marketplace add NeuraLegion/bright-ai-plugins` then `copilot plugin install bright-security@brightsec` (plus one `copilot mcp add` — see [`github-copilot/`](./github-copilot/)) |
-| **Antigravity CLI** | `agy plugin install https://github.com/NeuraLegion/bright-ai-plugins/tree/main/antigravity` |
-
-Marketplace manifests at the repo root:
-`.cursor-plugin/marketplace.json` (Cursor), `.claude-plugin/marketplace.json` (Claude Code),
-`.agents/plugins/marketplace.json` (Codex), `.github/plugin/marketplace.json` (Copilot CLI).
-All four index the marketplace name `brightsec` and the plugin name `bright-security`.
-
 ## Packages
 
-| Tool | Folder | Agents | Skills | MCP config |
-|------|--------|--------|--------|------------|
-| Cursor | [`cursor/`](./cursor/) | `agents/*.md` | `skills/*/SKILL.md` | `mcp.json` |
-| Claude Code | [`claude-code/`](./claude-code/) | `agents/*.md` | `skills/*/SKILL.md` | `.mcp.json` |
-| Codex | [`codex/`](./codex/) | as skills* | `skills/*/SKILL.md` | `.mcp.json` |
-| GitHub Copilot | [`github-copilot/`](./github-copilot/) | `agents/*.agent.md` (CLI), `.github/agents/*.md` (coding agent) | `skills/*/SKILL.md` | `copilot mcp add` / agent frontmatter |
-| Antigravity CLI | [`antigravity/`](./antigravity/) | as skills* | `skills/*/SKILL.md` | `mcp_config.json` |
+Each tool has its own package with native install, usage, update, and uninstall steps in its
+README:
 
-\* Codex and Antigravity CLI have no separate agent type — the two orchestration workflows
-ship as skills.
+- **Cursor** — [`cursor/`](./cursor/)
+- **Claude Code** — [`claude-code/`](./claude-code/)
+- **Codex** — [`codex/`](./codex/)
+- **GitHub Copilot** — [`github-copilot/`](./github-copilot/)
+- **Antigravity CLI** — [`antigravity/`](./antigravity/)
 
-The `cursor/` package is the canonical source the other packages mirror.
+The `cursor/` package is the canonical source the others mirror. Codex and Antigravity have no
+separate agent type, so their two orchestration workflows ship as skills.
+
+Marketplace manifests live at the repo root — `.cursor-plugin/marketplace.json`,
+`.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`,
+`.github/plugin/marketplace.json` — all indexing the marketplace `brightsec` and the plugin
+`bright-security`.
 
 ## Required environment (all packages)
 - `BRIGHT_HOSTNAME` — Bright cluster hostname (e.g. `app.brightsec.com`)
