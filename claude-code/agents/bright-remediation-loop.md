@@ -20,8 +20,9 @@ and equivalent test set that originally exposed the issue.
 ## Constraints
 
 - Scan only targets the user owns or is explicitly authorized to test (local, staging, or any
-  environment the user authorizes). Reach private/local targets through the Bright Repeater;
-  a public target can be scanned directly.
+  environment the user authorizes). Reach private/local targets through a Bright Repeater
+  running on this machine, so the target must be reachable from here; a public target can be
+  scanned directly.
 - Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
   Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
   shell environment. Verify both with `test -n` as the very first step and stop with a clear

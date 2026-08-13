@@ -70,7 +70,13 @@ nothing errors: the Repeater registers on one cluster while the scan runs on ano
 scan simply never finds it. Passing the configured hostname below keeps both sides on the same
 cluster — do not substitute a different one.
 
-Start the Bright CLI Repeater in the environment that can reach the target:
+The Repeater runs here, on the machine this agent is running on. It is what gives Bright a route
+to a target that is not reachable from the internet, so the target has to be reachable from
+here — over localhost, the local network, a VPN, a tunnel, or a port-forward the user already
+has in place. Setting that up is the user's side of it; confirm the target answers from this
+machine before starting the Repeater, and stop and say so if it does not.
+
+Start the Bright CLI Repeater:
 
 ```bash
 npx @brightsec/cli repeater --id <REPEATER_ID> --hostname "$BRIGHT_HOSTNAME" --token "$BRIGHT_TOKEN"

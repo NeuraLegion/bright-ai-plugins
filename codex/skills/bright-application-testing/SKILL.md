@@ -22,8 +22,9 @@ severity, affected endpoints, and next steps.
   local dev server, a staging/QA environment, or any host the user authorizes. If the target
   is not obviously owned by the user (e.g. a public third-party domain), confirm authorization
   before scanning.
-- Reach private or local targets through a Bright CLI Repeater. A publicly reachable target
-  can be scanned directly without a Repeater.
+- Reach private or local targets through a Bright CLI Repeater running on this machine, which
+  means the target must be reachable from here. A publicly reachable target can be scanned
+  directly without a Repeater.
 - Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
   Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
   shell environment. Verify both with `test -n` as the very first step and stop with a clear
@@ -71,7 +72,8 @@ local copy of an app the user asked you to test on staging scans the wrong thing
    pick and why.
 
 Record `baseUrl` and how the target is run; later phases need both. A private or local target is
-scanned through a Repeater in the same environment; a public target is reached directly.
+scanned through a Repeater running on this machine, so it has to answer from here; a public
+target is reached directly.
 
 ### Phase 3: Configure Bright
 
