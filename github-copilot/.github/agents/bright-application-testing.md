@@ -43,8 +43,9 @@ severity, affected endpoints, and next steps.
   access. Judge this from the handler, not from the HTTP method or a field name.
 - Reach the target the way the user described. Their instruction outranks anything inferred
   from the repository; when they gave none, ask rather than assume.
-- Resolve the Bright project before creating anything. Ask the user when it was not supplied,
-  and reuse that one project for the Repeater, auth, entrypoints, and scans.
+- Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
+  entrypoints, and scans. Use the one the user named; if the token reaches exactly one project,
+  use that and say so; if it reaches several, ask rather than guess.
 - Configure authentication when the application requires it. Do not treat `401` or `403`
   responses as acceptable scan input.
 - Do not modify application code. This agent scans and reports only.
@@ -87,7 +88,8 @@ target is reached directly.
 
 Use the `setup-repeater` skill.
 
-1. Resolve the Bright project, asking the user when they did not supply one.
+1. Resolve the Bright project, asking only when the token reaches more than one and the user
+   named none.
 2. Create or reuse a dedicated Repeater when the target is private/local.
 3. Start the Repeater with `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`, on the same cluster the MCP server is registered against.
 4. Verify that Bright reports the Repeater as connected.

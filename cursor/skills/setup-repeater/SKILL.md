@@ -48,11 +48,15 @@ Every Bright object created in this run — the Repeater, the auth object, the e
 the scans — is scoped to one project. Resolve it once, before creating anything.
 
 1. If the user gave a project (id or name), use it and continue to Step 2.
-2. Otherwise call `listProjects` and ask the user which one to use.
+2. Otherwise call `listProjects`.
+3. If it returns exactly one project, use it and name it in your output. A project-scoped
+   `BRIGHT_TOKEN` reaches only its own project, so there is nothing to choose between and
+   asking would be friction over a decision that has already been made.
+4. If it returns several, ask the user which one.
 
-Do not choose on the user's behalf: not by repository-name similarity, and not by taking the
-first result. A wrong guess writes scan data into someone else's project, and picking again
-later leaves the Repeater and the scan in different projects.
+Never pick between several on the user's behalf: not by repository-name similarity, and not by
+taking the first result. A wrong guess writes scan data into someone else's project, and
+picking again later leaves the Repeater and the scan in different projects.
 
 Record the resolved `projectId` and pass that same value to every later Bright call in this
 run. Never resolve it a second time.
