@@ -29,8 +29,9 @@ and equivalent test set that originally exposed the issue.
   from the repository; when they gave none, ask rather than assume.
 - Establish the redeploy path before the baseline scan. Without one, validation is impossible,
   and that has to be said up front rather than discovered after the first fix round.
-- Resolve the Bright project before creating anything. Ask the user when it was not supplied,
-  and reuse that one project for the Repeater, auth, entrypoints, and every scan round.
+- Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
+  entrypoints, and every scan round. Use the one the user named; if the token reaches exactly
+  one project, use that and say so; if it reaches several, ask rather than guess.
 - Keep edits minimal and limited to the code that causes the finding.
 - Do not leave placeholder remediation code or vague TODO scaffolding in the repository.
 - If a finding cannot be safely auto-remediated, stop and explain the blocker instead of guessing.
