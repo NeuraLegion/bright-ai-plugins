@@ -25,27 +25,33 @@ Capture:
 When credentials are needed for a test login, prefer seed data, fixtures, `.env.example`,
 or repository setup docs. Do not invent credentials that have no evidence in the repo.
 
-### Step 2: Reuse or create a Bright auth object
+### Step 2: Reuse an existing auth object when one fits
 
-1. Call `listAuths`.
-2. Reuse an existing suitable object when it matches the same auth flow.
-3. Otherwise call `addAuth` in the project resolved in `setup-repeater`. Set
-   `repeaterRequired: true` for private or local targets, so the login itself runs through the
-   connected Repeater.
-4. Configure re-auth triggers (`reauthTriggers`) for `401` and `403` responses.
+Call `listAuths` in the project resolved in `setup-repeater`. If an existing object covers the
+same auth flow, verify it with `testAuth` and use it — there is nothing to create.
 
-### Step 3: Stabilize the auth object
+### Step 3: Verify the auth flow before saving anything
 
-Validate the candidate auth object with `testAuth` before using it in a scan. If it fails,
-retry with targeted corrections:
+`testAuth` accepts an unsaved payload (`authObject`) as well as a saved object
+(`authObjectId`). Iterate on the unsaved payload and call `addAuth` only once it verifies.
+Creating the object first and fixing it afterwards leaves a dead auth object in the user's
+project for every failed attempt.
 
-1. Fix the login body shape.
-2. Fix token extraction.
-3. Fix header format or header name.
-4. Verify the login endpoint path and content type.
-5. Verify the target is reachable (through the Repeater for private/local targets).
+Read the verdict explicitly: `verified=false`, or any entry in `tests[]` with `failed=true`,
+means auth is not verified. Do not proceed on a partial pass.
+
+Correct the payload from the per-result evidence the test returns. Common causes — not an
+exhaustive list — are the login body shape, token extraction, header name or format, the login
+endpoint path and content type, and reachability of the target (through the Repeater for
+private or local targets).
 
 Retry up to 10 times. If auth is still broken, stop and report the exact reason.
+
+### Step 4: Save the verified auth object
+
+Call `addAuth` with the payload that verified, in the project resolved in `setup-repeater`. Set
+`repeaterRequired: true` for private or local targets, so the login itself runs through the
+connected Repeater, and configure `reauthTriggers` for `401` and `403` responses.
 
 ### Output
 

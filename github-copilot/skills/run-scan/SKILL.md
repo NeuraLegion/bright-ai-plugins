@@ -7,21 +7,28 @@ description: Select Bright security tests, run scans against registered entrypoi
 
 ### Step 1: Select the test set
 
-Call `listTests` (the source of truth for tag identifiers) and map endpoint characteristics to the smallest useful Bright test set.
+Call `listTests` and select from its response. It returns every test the connected Bright
+cluster supports, each with a `tag`, a `description`, server-assigned `buckets` (such as `api`,
+`server_side`, `client_side`, `business_logic`, `mcp_attacks`), and `enabled`, `deprecated`,
+and `mutuallyExclusive` flags.
 
-Suggested mapping:
+1. Drop tests that are `deprecated` or not `enabled`.
+2. Narrow by `buckets` to what the target actually is. An HTTP API draws on `api` and
+   `server_side`; a rendered web UI adds `client_side`; an MCP server adds `mcp_attacks`.
+3. Within that shortlist, match each test's own `description` against what the endpoint group
+   does — where it takes input, whether it renders templates, accepts uploads, executes
+   commands, reaches other services, or is the authentication surface itself.
+4. Give any test flagged `mutuallyExclusive` a scan of its own — it cannot share one with
+   other tests.
 
-| Endpoint characteristic | Bright test tags |
-|------------------------|------------------|
-| User input in body or query | `xss`, `stored_xss`, `sqli` |
-| Path or URL parameters | `lfi`, `ssrf`, `unvalidated_redirect` |
-| File upload | `file_upload` |
-| Template rendering | `ssti` |
-| Command execution | `osi` |
-| Auth-sensitive endpoints | `jwt`, `brute_force_login` |
-| All endpoints | `header_security`, `cookie_security`, `secret_tokens`, `csrf` |
+Do not scan from a remembered list of tags. Bright ships far more tests than any fixed mapping
+would name and the catalogue changes between releases, so a hardcoded list silently narrows the
+scan to a fraction of the product. In particular, an API surface scanned without the
+access-control and object-authorization tests in the `api` and `business_logic` buckets will
+miss the most common API vulnerability classes.
 
-Do not include destructive or special-case tests unless the user explicitly asks for them.
+Keep the set as small as it can be while still covering the endpoint group. Do not include
+destructive or special-case tests unless the user explicitly asks for them.
 
 ### Step 2: Group scan work
 
