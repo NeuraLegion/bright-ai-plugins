@@ -45,8 +45,12 @@ run. Never resolve it a second time.
 
 ### Step 3: Start the Repeater
 
-Use the same hostname and token as MCP to start the Bright CLI Repeater in the environment
-that can reach the target:
+The Repeater has to run against the same Bright cluster as the MCP server. If it does not,
+nothing errors: the Repeater registers on one cluster while the scan runs on another, and the
+scan simply never finds it. Point `BRIGHT_HOSTNAME` at the cluster the MCP server is registered
+against before starting it.
+
+Start the Bright CLI Repeater in the environment that can reach the target:
 
 ```bash
 npx @brightsec/cli repeater --id <REPEATER_ID> --hostname "$BRIGHT_HOSTNAME" --token "$BRIGHT_TOKEN"
@@ -60,7 +64,9 @@ npm install -g @brightsec/cli
 
 ### Step 4: Verify connectivity
 
-1. Poll `listRepeaters` until the Repeater is connected.
+1. Poll `listRepeaters` until the Repeater is connected. This call goes through the MCP server,
+   so it is also the check that both sides agree on the cluster: a Repeater whose process is
+   running but never appears here was started against a different one.
 2. Retry up to 3 times.
 3. If it never connects, capture the process output and stop.
 
