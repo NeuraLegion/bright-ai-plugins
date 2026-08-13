@@ -39,7 +39,9 @@ Marketplace manifests live at the repo root — `.cursor-plugin/marketplace.json
 - `BRIGHT_HOSTNAME` — Bright cluster hostname (e.g. `app.brightsec.com`)
 - `BRIGHT_TOKEN` — Bright API token (used by the MCP server and the Bright CLI Repeater)
 - **A Bright project** — everything a run creates (Repeater, auth object, entrypoints, scans)
-  is scoped to one project. Name it when you start; the agents ask rather than guess, because
+  is scoped to one project. With a **project-scoped** `BRIGHT_TOKEN` there is only one project
+  to reach, so the agents use it and tell you which; you never need to name it. With an
+  org-wide token, name the project when you start — the agents ask rather than guess, because
   guessing wrong writes your scan results into someone else's project.
 
 ```bash
@@ -83,6 +85,9 @@ It reads your routes and controllers, works out realistic request bodies, exclud
 whose effects can't be undone, registers the rest, picks tests from the Bright catalogue for
 what each endpoint actually does, and scans. You get findings grouped by severity with the
 method, URL, evidence, and the endpoint each one belongs to.
+
+The examples below name a project because an org-wide token can reach many. On a project-scoped
+token, drop that part — there is only one project and the agent uses it.
 
 ### 2. Scan an environment that's already deployed
 
