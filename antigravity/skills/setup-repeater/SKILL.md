@@ -1,26 +1,41 @@
 ---
 name: setup-repeater
-description: Select a Bright project and, for private or local targets, create or reuse a Repeater and connect it to the application under test.
+description: Establish the Bright project for the run and, for private or local targets, create or reuse a Repeater and connect it to the application under test.
 ---
 
 ## Setup Bright Project and Repeater
 
 ### Preconditions
 
-Before starting a Repeater, require `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`.
-Both are used by the MCP config (URL and auth header) and by the Bright CLI Repeater.
-If either is missing, stop and ask the user to provide it. Expect them from the environment's
-secret store (CI/cloud secrets) or the local shell environment.
+`BRIGHT_TOKEN` authenticates every Bright operation. `BRIGHT_HOSTNAME` selects the Bright
+cluster and is required to start the Repeater.
+
+How the MCP server itself gets these differs by tool — some read them from the environment on
+each call, others had them fixed when the server was registered. Do not assume the MCP server
+points at `BRIGHT_HOSTNAME`; if Bright calls fail on authentication or reach the wrong cluster,
+report that the MCP server needs re-registering instead of retrying.
+
+Expect both values from the environment's secret store (CI/cloud secrets) or the local shell
+environment. If one is missing, stop and ask the user to provide it.
 
 A Repeater is required only for **private or local** targets. A publicly reachable target
-(e.g. a public staging URL) can be scanned directly — skip to project selection and pass no
-`repeaters` to the scan.
+(e.g. a public staging URL) can be scanned directly: still resolve the project in Step 1, then
+skip Steps 2–4 and pass no `repeaters` to the scan.
 
-### Step 1: Select the Bright project
+### Step 1: Resolve the Bright project
 
-1. Call `listProjects`.
-2. Prefer the project whose name matches the repository or application name.
-3. Otherwise use the closest match or the first available project.
+Every Bright object created in this run — the Repeater, the auth object, the entrypoints, and
+the scans — is scoped to one project. Resolve it once, before creating anything.
+
+1. If the user gave a project (id or name), use it and continue to Step 2.
+2. Otherwise call `listProjects` and ask the user which one to use.
+
+Do not choose on the user's behalf: not by repository-name similarity, and not by taking the
+first result. A wrong guess writes scan data into someone else's project, and picking again
+later leaves the Repeater and the scan in different projects.
+
+Record the resolved `projectId` and pass that same value to every later Bright call in this
+run. Never resolve it a second time.
 
 ### Step 2: Create or reuse a Repeater (private/local targets)
 

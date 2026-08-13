@@ -29,7 +29,9 @@ or repository setup docs. Do not invent credentials that have no evidence in the
 
 1. Call `listAuths`.
 2. Reuse an existing suitable object when it matches the same auth flow.
-3. Otherwise call `addAuth` with the required fields (`name`, `type`, `config`, `test`, `projectId`). Set `repeaterRequired: true` for local/private targets so auth runs through the connected Repeater.
+3. Otherwise call `addAuth` in the project resolved in `setup-repeater`. Set
+   `repeaterRequired: true` for private or local targets, so the login itself runs through the
+   connected Repeater.
 4. Configure re-auth triggers (`reauthTriggers`) for `401` and `403` responses.
 
 ### Step 3: Stabilize the auth object

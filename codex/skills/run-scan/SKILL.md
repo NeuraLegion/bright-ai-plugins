@@ -27,7 +27,9 @@ Do not include destructive or special-case tests unless the user explicitly asks
 
 Group entrypoints by equivalent test set so the scan plan stays compact and easy to reuse.
 
-For each group, record:
+For each group, record the configuration below. A later validation scan has to reproduce it
+exactly to prove a fix worked, so this is the baseline the remediation loop reuses — not a
+restatement of the tool schema:
 - `entrypointIds`
 - `tests`
 - attack locations (body, query, path, or headers)
@@ -36,13 +38,8 @@ For each group, record:
 
 ### Step 3: Launch scans
 
-Call `runScan` with:
-- `projectId`
-- `entrypointIds`
-- `tests`
-- `repeaters` as an array
-- `authObjectId` when applicable
-- attack locations appropriate for the endpoint shape (body, query, path, or headers)
+Call `runScan` once per group, in the project resolved in `setup-repeater`, using that group's
+recorded configuration.
 
 ### Step 4: Monitor to completion
 
