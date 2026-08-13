@@ -1,0 +1,16 @@
+name: Package Sync
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  package-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shared skills and agents are identical across packages
+        run: python3 scripts/check_package_sync.py

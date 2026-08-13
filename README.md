@@ -48,6 +48,22 @@ Each package's `README.md` has the tool-specific install steps and MCP notes (so
 expand env vars in MCP config; Codex and Copilot need the token wired differently — the
 package READMEs cover it).
 
+## Keeping the packages in sync
+Every package ships the same six step skills and two orchestration agents. Only the
+frontmatter differs per tool — Copilot's agents carry an `mcp-servers` block, Codex and
+Antigravity carry the agents as skills without an `argument-hint`. The instructions below the
+frontmatter must be identical everywhere, so a change to one package has to reach all of them.
+
+`claude-code` is the canonical copy. Edit it, then propagate:
+
+```bash
+python3 scripts/check_package_sync.py --fix   # propagate, then review the result
+python3 scripts/check_package_sync.py         # verify; this is what CI runs
+```
+
+The check also fails on a component it doesn't know about, so a new package or skill can't
+be added while silently sitting outside the check.
+
 ## Safety
 Only scan targets you own or are explicitly authorized to test — a local dev server, a
 staging/QA environment, or any host you're authorized to assess. The agents ask for

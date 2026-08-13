@@ -28,7 +28,7 @@ the route requires authentication.
 
 ### Step 3: Decide whether discovery is better
 
-If the safe route surface is large, generated, or hard to enumerate manually, switch to
+If the retained route surface is large, generated, or hard to enumerate manually, switch to
 `runDiscovery` with the same base URL and, for private/local targets, the active Repeater.
 
 ### Step 4: Prune bad registrations

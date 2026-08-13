@@ -1,6 +1,6 @@
 ---
 name: analyze-codebase
-description: Detect the technology stack and discover safe HTTP endpoints that can be scanned through Bright DAST.
+description: Detect the technology stack and inventory the HTTP endpoints that can be scanned through Bright DAST, excluding those whose effects cannot be undone.
 ---
 
 ## Analyze Codebase
