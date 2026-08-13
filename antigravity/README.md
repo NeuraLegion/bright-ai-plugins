@@ -12,8 +12,8 @@ alongside the six step skills:
 - **Step skills:** `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`,
   `run-scan`, `fix-and-validate`
 
-The always-on safety constraints (authorization, Repeater-for-private, no destructive endpoints,
-`repeaters` as an array) are embedded in the orchestration skills.
+The always-on safety constraints (authorization, Repeater-for-private, an explicit Bright
+project, no endpoints with effects you cannot undo) are embedded in the orchestration skills.
 
 ---
 

@@ -29,9 +29,11 @@ and equivalent test set that originally exposed the issue.
 - Scan only targets the user owns or is explicitly authorized to test (local, staging, or any
   environment the user authorizes). Reach private/local targets through the Bright Repeater;
   a public target can be scanned directly.
-- Require `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN` before any Bright operation. Expect them from
-  the environment's secret store (CI/cloud secrets) or the local shell environment. The MCP
-  server and the Repeater both use these values.
+- Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
+  Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
+  shell environment.
+- Resolve the Bright project before creating anything. Ask the user when it was not supplied,
+  and reuse that one project for the Repeater, auth, entrypoints, and every scan round.
 - Keep edits minimal and limited to the code that causes the finding.
 - Do not leave placeholder remediation code or vague TODO scaffolding in the repository.
 - If a finding cannot be safely auto-remediated, stop and explain the blocker instead of guessing.
@@ -44,7 +46,7 @@ and equivalent test set that originally exposed the issue.
 
 1. Analyze the repository with `analyze-codebase`.
 2. Reach the application target (start it locally or use the supplied authorized URL) and confirm its health.
-3. Configure Bright and the Repeater with `setup-repeater`.
+3. Resolve the Bright project and configure the Repeater with `setup-repeater`.
 4. Configure authentication with `setup-auth` when needed.
 5. Register entrypoints with `register-entrypoints`.
 

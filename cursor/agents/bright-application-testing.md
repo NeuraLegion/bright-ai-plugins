@@ -25,14 +25,16 @@ severity, affected endpoints, and next steps.
   before scanning.
 - Reach private or local targets through a Bright CLI Repeater. A publicly reachable target
   can be scanned directly without a Repeater.
-- Require `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN` before any Bright operation. Expect them from
-  the environment's secret store (CI/cloud secrets) or the local shell environment. The MCP
-  server and the Repeater both use these values.
-- Filter destructive endpoints before registration: all `DELETE` routes, credential mutation
-  routes, and routes whose body mutates passwords or email.
+- Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
+  Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
+  shell environment.
+- Exclude endpoints whose effects the user cannot undo in this environment — irreversible
+  state changes, out-of-band side effects, or anything that would revoke the scan's own
+  access. Judge this from the handler, not from the HTTP method or a field name.
+- Resolve the Bright project before creating anything. Ask the user when it was not supplied,
+  and reuse that one project for the Repeater, auth, entrypoints, and scans.
 - Configure authentication when the application requires it. Do not treat `401` or `403`
   responses as acceptable scan input.
-- Always pass `repeaters` as an array when launching scans or discovery.
 - Do not modify application code. This agent scans and reports only.
 
 ## Workflow
@@ -44,7 +46,8 @@ Use the `analyze-codebase` skill.
 Collect:
 - languages, frameworks, databases, and startup clues
 - route/controller files or API definitions
-- safe endpoint inventory with method, path, sample body, sample query, and content type
+- the endpoint inventory with method, path, sample body, sample query, and content type,
+  and the endpoints excluded as unsafe to fuzz
 
 Present the planned target surface before scanning.
 
@@ -67,9 +70,9 @@ environment; a public target can be reached directly.
 
 Use the `setup-repeater` skill.
 
-1. Select the Bright project.
+1. Resolve the Bright project, asking the user when they did not supply one.
 2. Create or reuse a dedicated Repeater when the target is private/local.
-3. Use `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN` for Bright MCP access and start the Repeater with the same hostname and token.
+3. Start the Repeater with `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`, on the same cluster the MCP server is registered against.
 4. Verify that Bright reports the Repeater as connected.
 
 ### Phase 4: Configure authentication
@@ -83,7 +86,7 @@ retry until it is stable or you hit the retry ceiling.
 
 Use the `register-entrypoints` skill.
 
-Prefer manually registered entrypoints when the safe endpoint set is small and well
+Prefer manually registered entrypoints when the retained endpoint set is small and well
 understood. Prefer discovery when the route surface is large or heavily generated.
 
 ### Phase 6: Run DAST
