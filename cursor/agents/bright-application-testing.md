@@ -31,6 +31,8 @@ severity, affected endpoints, and next steps.
 - Exclude endpoints whose effects the user cannot undo in this environment — irreversible
   state changes, out-of-band side effects, or anything that would revoke the scan's own
   access. Judge this from the handler, not from the HTTP method or a field name.
+- Reach the target the way the user described. Their instruction outranks anything inferred
+  from the repository; when they gave none, ask rather than assume.
 - Resolve the Bright project before creating anything. Ask the user when it was not supplied,
   and reuse that one project for the Repeater, auth, entrypoints, and scans.
 - Configure authentication when the application requires it. Do not treat `401` or `403`
@@ -53,18 +55,22 @@ Present the planned target surface before scanning.
 
 ### Phase 2: Reach the application target
 
-If the user supplied a target URL (local, staging, or another authorized environment), verify
-its health with `curl` and record `baseUrl`. Otherwise determine the smallest reliable startup
-path and start the app locally:
+Start from what the user told you. If they named a target URL, a deploy command, a Helm release,
+a script, or an environment to use, follow that and do not substitute a method they did not ask
+for. What a repository contains is not evidence of how the application is actually run — a
+`Dockerfile` may exist for CI while the real deployment is a Kubernetes chart, and starting a
+local copy of an app the user asked you to test on staging scans the wrong thing.
 
-1. `docker-compose.yml` or `compose.yaml`
-2. `Dockerfile`
-3. `Makefile` targets such as `run`, `start`, or `dev`
-4. `package.json` scripts
-5. framework-specific direct commands
+1. **A target URL was supplied.** Verify its health with `curl`, record `baseUrl`, and start
+   nothing.
+2. **A way to bring the application up was described.** Do that, then health-check it.
+3. **Neither.** Ask how they want the application reached. Offer what the repository suggests —
+   a compose file, a `Dockerfile`, a `Makefile` target, a package script, a framework command —
+   as candidates for them to choose, not as a decision already made. Say which one you would
+   pick and why.
 
-Record `baseUrl`. A private/local target is scanned through a Repeater running in the same
-environment; a public target can be reached directly.
+Record `baseUrl` and how the target is run; later phases need both. A private or local target is
+scanned through a Repeater in the same environment; a public target is reached directly.
 
 ### Phase 3: Configure Bright
 

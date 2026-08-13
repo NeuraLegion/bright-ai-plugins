@@ -13,8 +13,12 @@ So the rule enforced here is:
 
   * the body (everything after the frontmatter) must match the canonical copy
     byte for byte
-  * the frontmatter `name` and `description` must match the canonical copy
-  * any other frontmatter key is tool-specific wiring and is left alone
+  * every frontmatter key present in *both* files must match -- `name`,
+    `description` and `argument-hint` are prompt text, not wiring, and drift in
+    them is the same bug as drift in the body
+  * a key only one side has is left alone: Copilot's `mcp-servers` block has no
+    canonical counterpart, and the variants that deliberately drop
+    `argument-hint` keep dropping it
 
 `claude-code` is the canonical copy. Run with --fix to rewrite every variant's
 body from it, keeping each variant's own frontmatter.
@@ -64,12 +68,21 @@ def split_frontmatter(path: Path) -> tuple[str, str]:
     return text[: end + 5], text[end + 5 :]
 
 
-def frontmatter_field(frontmatter: str, key: str) -> str | None:
-    """Read a single-line top-level frontmatter value."""
+def frontmatter_fields(frontmatter: str) -> dict[str, str]:
+    """Top-level `key: value` pairs written on a single line.
+
+    Nested blocks such as Copilot's `mcp-servers` yield an empty value, which is
+    harmless: they exist on one side only, so they are never compared.
+    """
+    fields: dict[str, str] = {}
     for line in frontmatter.splitlines():
-        if line.startswith(f"{key}:"):
-            return line[len(key) + 1 :].strip()
-    return None
+        if not line or line[0] in " \t#-" or ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        if key != key.strip():
+            continue
+        fields[key] = value.strip()
+    return fields
 
 
 def groups() -> list[tuple[str, Path, list[Path]]]:
@@ -139,23 +152,26 @@ def main() -> int:
 
             var_fm, var_body = split_frontmatter(variant)
 
-            for key in ("name", "description"):
-                want = frontmatter_field(canon_fm, key)
-                got = frontmatter_field(var_fm, key)
-                if want != got:
-                    if args.fix:
-                        var_fm = "\n".join(
-                            f"{key}: {want}" if line.startswith(f"{key}:") else line
-                            for line in var_fm.splitlines()
-                        ) + "\n"
-                        fixed.append(f"{rel}: frontmatter {key}")
-                    else:
-                        problems.append(
-                            f"{rel}: frontmatter `{key}` differs from "
-                            f"{canonical.relative_to(REPO)}\n"
-                            f"      canonical: {want}\n"
-                            f"      variant:   {got}"
-                        )
+            canon_fields = frontmatter_fields(canon_fm)
+            var_fields = frontmatter_fields(var_fm)
+
+            for key in canon_fields.keys() & var_fields.keys():
+                want, got = canon_fields[key], var_fields[key]
+                if want == got:
+                    continue
+                if args.fix:
+                    var_fm = "\n".join(
+                        f"{key}: {want}" if line.startswith(f"{key}:") else line
+                        for line in var_fm.splitlines()
+                    ) + "\n"
+                    fixed.append(f"{rel}: frontmatter {key}")
+                else:
+                    problems.append(
+                        f"{rel}: frontmatter `{key}` differs from "
+                        f"{canonical.relative_to(REPO)}\n"
+                        f"      canonical: {want}\n"
+                        f"      variant:   {got}"
+                    )
 
             if var_body != canon_body:
                 if args.fix:
