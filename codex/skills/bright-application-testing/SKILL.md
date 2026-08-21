@@ -22,16 +22,20 @@ severity, affected endpoints, and next steps.
   local dev server, a staging/QA environment, or any host the user authorizes. If the target
   is not obviously owned by the user (e.g. a public third-party domain), confirm authorization
   before scanning.
-- Reach private or local targets through a Bright CLI Repeater. A publicly reachable target
-  can be scanned directly without a Repeater.
+- Reach private or local targets through a Bright CLI Repeater running on this machine, which
+  means the target must be reachable from here. A publicly reachable target can be scanned
+  directly without a Repeater.
 - Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
   Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
   shell environment.
 - Exclude endpoints whose effects the user cannot undo in this environment — irreversible
   state changes, out-of-band side effects, or anything that would revoke the scan's own
   access. Judge this from the handler, not from the HTTP method or a field name.
-- Resolve the Bright project before creating anything. Ask the user when it was not supplied,
-  and reuse that one project for the Repeater, auth, entrypoints, and scans.
+- Reach the target the way the user described. Their instruction outranks anything inferred
+  from the repository; when they gave none, ask rather than assume.
+- Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
+  entrypoints, and scans. Use the one the user named; if the token reaches exactly one project,
+  use that and say so; if it reaches several, ask rather than guess.
 - Configure authentication when the application requires it. Do not treat `401` or `403`
   responses as acceptable scan input.
 - Do not modify application code. This agent scans and reports only.
@@ -52,24 +56,30 @@ Present the planned target surface before scanning.
 
 ### Phase 2: Reach the application target
 
-If the user supplied a target URL (local, staging, or another authorized environment), verify
-its health with `curl` and record `baseUrl`. Otherwise determine the smallest reliable startup
-path and start the app locally:
+Start from what the user told you. If they named a target URL, a deploy command, a Helm release,
+a script, or an environment to use, follow that and do not substitute a method they did not ask
+for. What a repository contains is not evidence of how the application is actually run — a
+`Dockerfile` may exist for CI while the real deployment is a Kubernetes chart, and starting a
+local copy of an app the user asked you to test on staging scans the wrong thing.
 
-1. `docker-compose.yml` or `compose.yaml`
-2. `Dockerfile`
-3. `Makefile` targets such as `run`, `start`, or `dev`
-4. `package.json` scripts
-5. framework-specific direct commands
+1. **A target URL was supplied.** Verify its health with `curl`, record `baseUrl`, and start
+   nothing.
+2. **A way to bring the application up was described.** Do that, then health-check it.
+3. **Neither.** Ask how they want the application reached. Offer what the repository suggests —
+   a compose file, a `Dockerfile`, a `Makefile` target, a package script, a framework command —
+   as candidates for them to choose, not as a decision already made. Say which one you would
+   pick and why.
 
-Record `baseUrl`. A private/local target is scanned through a Repeater running in the same
-environment; a public target can be reached directly.
+Record `baseUrl` and how the target is run; later phases need both. A private or local target is
+scanned through a Repeater running on this machine, so it has to answer from here; a public
+target is reached directly.
 
 ### Phase 3: Configure Bright
 
 Use the `setup-repeater` skill.
 
-1. Resolve the Bright project, asking the user when they did not supply one.
+1. Resolve the Bright project, asking only when the token reaches more than one and the user
+   named none.
 2. Create or reuse a dedicated Repeater when the target is private/local.
 3. Start the Repeater with `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`, on the same cluster the MCP server is registered against.
 4. Verify that Bright reports the Repeater as connected.

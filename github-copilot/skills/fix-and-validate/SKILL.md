@@ -5,6 +5,15 @@ description: Apply minimal fixes for Bright findings and verify them by re-runni
 
 ## Fix and Validate
 
+### Prerequisite: a way to get fixes into the target
+
+Every round below ends in a validation scan, which only means anything if the edited code is
+what the target is running. Establish how a fix reaches the target before starting — restarting
+a local process or container, or a rebuild-and-redeploy command the user supplied and authorized.
+
+If there is no such path, this skill cannot complete a round: the comparison in step 6 has
+nothing to compare. Report that instead of running rounds whose results are not evidence.
+
 ### Working model
 
 Track findings by the key `{finding.name}::{method}::{url}`.
@@ -48,11 +57,15 @@ Preferred strategies:
 
 Do not leave placeholder code, fake guards, or broad speculative refactors.
 
-#### 4. Restart and health-check the app
+#### 4. Get the fix into the running target
 
-1. Restart the application.
-2. Verify health.
-3. Re-verify auth when the route surface requires it.
+1. Apply the path established at the start — restart the local process or container, or run the
+   user's rebuild-and-redeploy command. Restarting is not enough where the target runs a built
+   artifact: it has to be rebuilt and rolled out, or the scan re-tests the old code.
+2. Confirm the running target actually carries the change. A redeploy that silently failed is
+   indistinguishable from a fix that did not work, and costs a scan to find out.
+3. Verify health.
+4. Re-verify auth when the route surface requires it.
 
 #### 5. Re-run the same validation scan
 
@@ -75,8 +88,10 @@ an explicit, documented reason.
 ### Output
 
 Return:
+- how fixes reached the target, or that they could not
 - rounds completed
 - fixes applied
 - findings fixed after validation
+- fixes written but not validated, labelled as unverified rather than fixed
 - findings still open
 - blockers that prevented safe automatic remediation
