@@ -31,7 +31,9 @@ and equivalent test set that originally exposed the issue.
   a public target can be scanned directly.
 - Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
   Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
-  shell environment.
+  shell environment. Verify both with `test -n` as the very first step and stop with a clear
+  instruction to export what is missing and restart the session — never ask the user to paste
+  the token into the conversation, and never work around a missing one.
 - Resolve the Bright project before creating anything. Ask the user when it was not supplied,
   and reuse that one project for the Repeater, auth, entrypoints, and every scan round.
 - Keep edits minimal and limited to the code that causes the finding.

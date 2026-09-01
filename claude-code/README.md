@@ -20,14 +20,16 @@ findings — all from your terminal.
 ## Install
 
 **1. Export your Bright credentials** in the shell you launch `claude` from (the MCP server and the
-Bright Repeater both read them):
+Bright Repeater both read them, and the MCP server reads them at startup — so set them before
+launching, not mid-session):
 
 ```bash
 export BRIGHT_HOSTNAME="app.brightsec.com"   # your Bright cluster hostname
 export BRIGHT_TOKEN="your-bright-api-token"  # your Bright API token
 ```
 
-Add them to `~/.zshrc` / `~/.bashrc` so every session has them.
+Add them to `~/.zshrc` / `~/.bashrc` so every session has them. The agents check both up front and
+stop with a clear message if one is missing; the token is never requested in the conversation.
 
 **2. Install the plugin** from the marketplace:
 
@@ -36,8 +38,9 @@ claude plugin marketplace add NeuraLegion/bright-ai-plugins
 claude plugin install bright-security@brightsec
 ```
 
-That's it. Verify with `claude plugin list` (should show `bright-security@brightsec → enabled`), or
-inside a session run `/agents` to see the two Bright agents.
+That's it — the plugin is enabled on install. Verify with `claude plugin list` (should show
+`bright-security@brightsec → enabled`), or inside a session run `/agents` to see the two Bright
+agents.
 
 ---
 
