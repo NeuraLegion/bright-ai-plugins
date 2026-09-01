@@ -1,6 +1,7 @@
 {
   "name": "bright-security",
-  "version": "1.0.0",
+  "displayName": "Bright Security",
+  "version": "1.1.0",
   "description": "Bright DAST scanning and remediation automation for Claude Code using the Bright MCP server.",
   "author": {
     "name": "Bright Security",

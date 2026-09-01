@@ -34,7 +34,9 @@ severity, affected endpoints, and next steps.
   can be scanned directly without a Repeater.
 - Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
   Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
-  shell environment.
+  shell environment. Verify both with `test -n` as the very first step and stop with a clear
+  instruction to export what is missing and restart the session — never ask the user to paste
+  the token into the conversation, and never work around a missing one.
 - Exclude endpoints whose effects the user cannot undo in this environment — irreversible
   state changes, out-of-band side effects, or anything that would revoke the scan's own
   access. Judge this from the handler, not from the HTTP method or a field name.

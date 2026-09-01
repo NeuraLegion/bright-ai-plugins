@@ -8,15 +8,35 @@ description: Establish the Bright project for the run and, for private or local 
 ### Preconditions
 
 `BRIGHT_TOKEN` authenticates every Bright operation. `BRIGHT_HOSTNAME` selects the Bright
-cluster and is required to start the Repeater.
+cluster and is required to start the Repeater. Expect both values from the environment's secret
+store (CI/cloud secrets) or the local shell environment.
+
+Verify them before the first Bright call, so a missing value surfaces as a clear message instead
+of an opaque connection or authentication failure:
+
+```bash
+test -n "$BRIGHT_TOKEN" && echo "BRIGHT_TOKEN: set" || echo "BRIGHT_TOKEN: MISSING"
+test -n "$BRIGHT_HOSTNAME" && echo "BRIGHT_HOSTNAME: $BRIGHT_HOSTNAME" || echo "BRIGHT_HOSTNAME: MISSING"
+```
+
+If `BRIGHT_TOKEN` reports `MISSING`, stop. Tell the user to export it in the shell they launch
+the tool from and restart the session, because the MCP server reads it at startup:
+
+```bash
+export BRIGHT_TOKEN="your-bright-api-token"
+export BRIGHT_HOSTNAME="app.brightsec.com"
+```
+
+Never ask the user to paste the token into the conversation, and never work around a missing one.
+
+If only `BRIGHT_HOSTNAME` is missing, a public target can still be scanned directly — resolve the
+project in Step 1 and skip the Repeater. Ask for the hostname before Step 3 if a Repeater turns
+out to be necessary.
 
 How the MCP server itself gets these differs by tool — some read them from the environment on
 each call, others had them fixed when the server was registered. Do not assume the MCP server
 points at `BRIGHT_HOSTNAME`; if Bright calls fail on authentication or reach the wrong cluster,
 report that the MCP server needs re-registering instead of retrying.
-
-Expect both values from the environment's secret store (CI/cloud secrets) or the local shell
-environment. If one is missing, stop and ask the user to provide it.
 
 A Repeater is required only for **private or local** targets. A publicly reachable target
 (e.g. a public staging URL) can be scanned directly: still resolve the project in Step 1, then
@@ -47,8 +67,8 @@ run. Never resolve it a second time.
 
 The Repeater has to run against the same Bright cluster as the MCP server. If it does not,
 nothing errors: the Repeater registers on one cluster while the scan runs on another, and the
-scan simply never finds it. Point `BRIGHT_HOSTNAME` at the cluster the MCP server is registered
-against before starting it.
+scan simply never finds it. Passing the configured hostname below keeps both sides on the same
+cluster — do not substitute a different one.
 
 Start the Bright CLI Repeater in the environment that can reach the target:
 
