@@ -19,15 +19,22 @@ and equivalent test set that originally exposed the issue.
 ## Constraints
 
 - Scan only targets the user owns or is explicitly authorized to test (local, staging, or any
-  environment the user authorizes). Reach private/local targets through the Bright Repeater;
-  a public target can be scanned directly.
+  environment the user authorizes). Reach private/local targets through a Bright Repeater
+  running on this machine, so the target must be reachable from here; a public target can be
+  scanned directly.
 - Require `BRIGHT_TOKEN` before any Bright operation, and `BRIGHT_HOSTNAME` before starting a
   Repeater. Expect them from the environment's secret store (CI/cloud secrets) or the local
   shell environment. Verify both with `test -n` as the very first step and stop with a clear
   instruction to export what is missing and restart the session — never ask the user to paste
   the token into the conversation, and never work around a missing one.
-- Resolve the Bright project before creating anything. Ask the user when it was not supplied,
-  and reuse that one project for the Repeater, auth, entrypoints, and every scan round.
+- Reach the target the way the user described. Their instruction outranks anything inferred
+  from the repository. When they described nothing, work the startup out from the repository,
+  bring the application up locally, and say what you chose — do not stop to ask.
+- Establish the redeploy path before the baseline scan. Without one, validation is impossible,
+  and that has to be said up front rather than discovered after the first fix round.
+- Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
+  entrypoints, and every scan round. Use the one the user named; if the token reaches exactly
+  one project, use that and say so; if it reaches several, ask rather than guess.
 - Keep edits minimal and limited to the code that causes the finding.
 - Do not leave placeholder remediation code or vague TODO scaffolding in the repository.
 - If a finding cannot be safely auto-remediated, stop and explain the blocker instead of guessing.
@@ -38,11 +45,46 @@ and equivalent test set that originally exposed the issue.
 
 ### Phase 1: Prepare the target
 
+Start from what the user told you. If they named a target URL, a deploy command, a Helm release,
+a script, or an environment, follow that rather than a method inferred from the repository — a
+`Dockerfile` may exist for CI while the real deployment is something else entirely.
+
 1. Analyze the repository with `analyze-codebase`.
-2. Reach the application target (start it locally or use the supplied authorized URL) and confirm its health.
-3. Resolve the Bright project and configure the Repeater with `setup-repeater`.
-4. Configure authentication with `setup-auth` when needed.
-5. Register entrypoints with `register-entrypoints`.
+2. Reach the target the way the user described, and confirm its health. If they described
+   nothing, bring the application up locally from what the repository provides — compose file,
+   `Dockerfile`, `Makefile` target, package script, framework command, in that order — and say
+   which one you picked. A target you started yourself is also the case where this loop closes
+   most easily, since you can restart it.
+3. **Establish the redeploy path — see below — before scanning anything.**
+4. Resolve the Bright project and configure the Repeater with `setup-repeater`.
+5. Configure authentication with `setup-auth` when needed.
+6. Register entrypoints with `register-entrypoints`.
+
+### Phase 1a: Can this loop actually close?
+
+What this agent delivers is *verified* fixes: each remediation is proved by re-running the scan
+that exposed the issue. That proof requires the edited code to reach the running target. Work
+out whether it can before spending a scan on it, because the answer does not change later and
+discovering it after the first fix round wastes the user's time and their scan quota.
+
+- **A process or container you started** — you can restart it. The loop closes.
+- **A target the user deploys** — the loop closes only if they gave you a command that rebuilds
+  and redeploys, and you are authorized to run it.
+- **An environment you cannot deploy to**, including a target you were handed as a URL — you can
+  scan it and you can write fixes, but you cannot verify them. The loop does not close.
+
+When the loop cannot close, stop before the baseline scan, say plainly that validation will be
+skipped, and let the user choose:
+
+1. Give a redeploy command, and the loop runs in full.
+2. Point at an instance they control, and scan that instead.
+3. Continue with **no validation** — fixes get written and reported as unverified, no finding is
+   ever confirmed fixed, and rounds after the first have nothing to compare against, so the run
+   is a single scan plus patches.
+4. Stop after the scan and hand over findings without touching the code.
+
+Never skip validation quietly. A finding that disappeared is a claim you have not earned unless
+the same scan ran against the fixed code, so do not report unverified edits as remediated.
 
 ### Phase 2: Run the baseline DAST scan
 
@@ -72,9 +114,12 @@ Run up to 5 rounds:
 ### Phase 4: Summarize the outcome
 
 Return:
+- how the target was reached and redeployed, and whether validation was possible at all
 - rounds completed
 - fixes applied and files changed
 - findings that disappeared after validation
+- fixes that were written but never validated, if the user chose to continue without a
+  redeploy path — labelled as unverified, not as fixed
 - findings that remained open after the final round
 - any blockers that prevented safe remediation
 
