@@ -28,7 +28,8 @@ and equivalent test set that originally exposed the issue.
   instruction to export what is missing and restart the session — never ask the user to paste
   the token into the conversation, and never work around a missing one.
 - Reach the target the way the user described. Their instruction outranks anything inferred
-  from the repository; when they gave none, ask rather than assume.
+  from the repository. When they described nothing, work the startup out from the repository,
+  bring the application up locally, and say what you chose — do not stop to ask.
 - Establish the redeploy path before the baseline scan. Without one, validation is impossible,
   and that has to be said up front rather than discovered after the first fix round.
 - Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
@@ -50,8 +51,10 @@ a script, or an environment, follow that rather than a method inferred from the 
 
 1. Analyze the repository with `analyze-codebase`.
 2. Reach the target the way the user described, and confirm its health. If they described
-   nothing, ask, and offer what the repository suggests as candidates rather than picking one
-   silently.
+   nothing, bring the application up locally from what the repository provides — compose file,
+   `Dockerfile`, `Makefile` target, package script, framework command, in that order — and say
+   which one you picked. A target you started yourself is also the case where this loop closes
+   most easily, since you can restart it.
 3. **Establish the redeploy path — see below — before scanning anything.**
 4. Resolve the Bright project and configure the Repeater with `setup-repeater`.
 5. Configure authentication with `setup-auth` when needed.
