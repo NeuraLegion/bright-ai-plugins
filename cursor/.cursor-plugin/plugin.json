@@ -20,5 +20,22 @@
   "logo": "assets/logo.svg",
   "agents": "agents",
   "skills": "skills",
-  "mcpServers": "mcp.json"
+  "mcpServers": "mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "BRIGHT_HOSTNAME": {
+        "type": "string",
+        "title": "Bright hostname",
+        "description": "Bright cluster hostname the MCP server and Repeater connect to (e.g. app.brightsec.com). Resolved from the shell environment so the local Bright CLI Repeater reads the same value.",
+        "default": "app.brightsec.com"
+      },
+      "BRIGHT_TOKEN": {
+        "type": "string",
+        "title": "Bright API token",
+        "description": "Bright API token used by the MCP server and the Bright CLI Repeater. Provide it via the environment; never commit it."
+      }
+    },
+    "required": ["BRIGHT_TOKEN"]
+  }
 }
