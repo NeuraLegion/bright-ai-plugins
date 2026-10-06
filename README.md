@@ -4,7 +4,7 @@ Bright Security DAST agents and skills, installable the **native way** into ever
 coding tool from this single repository: Cursor, Claude Code, Codex, GitHub Copilot,
 and Antigravity CLI.
 
-Every package wires the **same two agents** and **six skills** to the Bright MCP server:
+Every package wires the **same three agents** and **seven skills** to the Bright MCP server:
 
 **Agents**
 - `bright-application-testing` — analyze the repo, reach the target (local, staging, or any
@@ -12,9 +12,12 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
   (through a Repeater for private/local targets).
 - `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run the same
   validation scans until findings are gone.
+- `bright-discovery` — analyze the repo, reach the target, discover every entrypoint with
+  high-quality parameter values, and hand back a reviewed attack surface — no scanning, no
+  code changes.
 
 **Skills**
-- `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `run-scan`, `fix-and-validate`
+- `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `discover-and-register`, `run-scan`, `fix-and-validate`
 
 ## Packages
 
@@ -28,7 +31,7 @@ README:
 - **Antigravity CLI** — [`antigravity/`](./antigravity/)
 
 The `cursor/` package is the canonical source the others mirror. Codex and Antigravity have no
-separate agent type, so their two orchestration workflows ship as skills.
+separate agent type, so their three orchestration workflows ship as skills.
 
 Marketplace manifests live at the repo root — `.cursor-plugin/marketplace.json`,
 `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`,
@@ -61,12 +64,12 @@ second agent closes the loop by proving the fix, instead of leaving you a report
 
 ### Which agent
 
-| | `bright-application-testing` | `bright-remediation-loop` |
-| --- | --- | --- |
-| Does | Scans and reports | Scans, edits code, re-scans until the finding is gone |
-| Touches your code | No | **Yes** |
-| Also needs | — | A way to get fixes into the running target |
-| Reach for it when | You want to know what's exposed | You want it fixed and the fix proved |
+| | `bright-application-testing` | `bright-remediation-loop` | `bright-discovery` |
+| --- | --- | --- | --- |
+| Does | Scans and reports | Scans, edits code, re-scans until the finding is gone | Discovers attack surface and registers entrypoints |
+| Touches your code | No | **Yes** | No |
+| Also needs | — | A way to get fixes into the running target | — |
+| Reach for it when | You want to know what's exposed | You want it fixed and the fix proved | Your targets are hard to crawl, you lack Swagger/HAR files, or you want a complete attack surface inventory before scanning |
 
 The remediation loop's value is the *proof*: a finding counts as fixed only when the same scan,
 over the same entrypoints and tests, stops reporting it. That requires your edited code to be
@@ -131,6 +134,21 @@ changed alongside the evidence that each change worked.
 Tell it how to redeploy — without that it can scan and write fixes but can't verify them, and it
 will stop and ask before spending a scan rather than reporting unverified edits as remediated.
 
+### 5. Map the attack surface without scanning
+
+Your targets crawl poorly, you have no Swagger spec, and you don't want to hand-build HAR
+files. The discovery agent reads the code, discovers every endpoint, works out parameter
+values that pass validation, and registers them in Bright — ready for a scan later.
+
+```
+> Use the bright-discovery agent to discover all endpoints in this app, Bright project "acme-api"
+```
+
+It analyzes routes and controllers, reaches the target, crawls or synthesizes an API spec from
+what it finds in the code, fills in realistic parameter values, registers the entrypoints, and
+prunes anything that doesn't connect. You get a reviewed attack surface with IDs, methods,
+URLs, and populated parameters — no scan is run.
+
 ### If your app doesn't start with `docker compose`
 
 Say how it runs and the agents follow that instead of guessing from the repository. A
@@ -142,7 +160,7 @@ app you asked about on staging scans the wrong thing.
 ```
 
 ## Keeping the packages in sync
-Every package ships the same six step skills and two orchestration agents. Only the
+Every package ships the same seven step skills and three orchestration agents. Only the
 frontmatter differs per tool — Copilot's agents carry an `mcp-servers` block, Codex and
 Antigravity carry the agents as skills without an `argument-hint`. The instructions below the
 frontmatter must be identical everywhere, so a change to one package has to reach all of them.
