@@ -1,59 +1,37 @@
 ---
 name: discover-and-register
-description: Discover the attack surface by crawl, API specification, or HAR, and register every entrypoint in Bright with code-grounded parameter values that pass validation and mutate well.
+description: Discover the attack surface whitebox from the source code and register every entrypoint in Bright directly, with code-grounded parameter values that pass validation and mutate well; crawl only as a justified fallback, with semantic deduplication and no static-asset noise.
 ---
 
 ## Discover and Register Entrypoints
 
-### Step 1: Choose the discovery inputs
+### Step 1: Build the inventory from the code (primary path)
 
-Pick the discovery mode (or modes) from what the repository actually offers:
+Whitebox discovery is the default and the main deliverable. You have the source, so build
+the full inventory from it instead of waiting for a crawler to stumble onto routes. Start
+from the `analyze-codebase` inventory and complete it by reading:
 
-- **Crawl** when the application serves a reachable UI or a set of seed URLs that
-  exercise the routes. Good for surfaces that are hard to enumerate from code alone.
-- **API specification** when the repository ships an OpenAPI/Swagger or GraphQL
-  schema, or when `analyze-codebase` produced a clean route inventory you can turn
-  into one.
-- **HAR** when the user handed you a recorded session, or when a quick scripted walk
-  of the app produces a representative trace.
+- routers and route tables, controllers, and handlers
+- middleware that shapes the surface — auth, path prefixes, versioning, mounted
+  sub-routers
+- proto/gRPC-gateway annotations (`google.api.http` gives the REST path and method)
+- DTOs, validators, and request schemas
+- OpenAPI/Swagger annotations or a shipped specification
 
-Run more than one mode when they cover different parts of the surface — a crawl for the
-rendered UI and an API spec for the back-end routes it never links to. Record the
-`projectId` resolved in `setup-repeater` and reuse it for every call here.
+For every operation record the method, the full path including mount prefixes, the
+path/query/header/body parameters, the content type, the auth requirement, and the handler
+identity (file plus function, or RPC name). Also note the surface the code cannot reveal —
+routes built at runtime, plugin route tables, server-rendered pages that are not statically
+visible, parts with no source in the repository. That list is the only input to Step 5.
+Reuse the `projectId` resolved in `setup-repeater` for every call here.
 
-### Step 2: Crawl discovery
+### Step 2: Craft parameter values — top priority
 
-Launch a crawl with `runDiscovery`, passing:
-- `projectId` and a descriptive `name`
-- `crawlerUrls`: the seed URLs the crawler starts from (the `baseUrl` and any routes
-  that are not linked from the landing page)
-- `repeaters`: the active Repeater as a single-element array for private or local
-  targets — omit it for a public target
-- `authObjectId`: the auth object resolved earlier, so the crawl reaches
-  authenticated routes instead of bouncing off the login wall
-
-Let the crawl complete, then reconcile its output in Step 5.
-
-### Step 3: API-specification discovery
-
-When the repository already ships a specification file, upload it with
-`uploadApiDefinition` (`projectId` plus either `url` for a hosted spec, or `content` as
-base64 with a `filename`). Pass the returned `fileId` to `runDiscovery` alongside
-`projectId`, `name`, the `repeaters` array for private/local targets, and
-`authObjectId`.
-
-When there is no specification, synthesize a minimal OpenAPI 3 document from the
-`analyze-codebase` endpoint inventory — paths, methods, parameters, and request bodies
-with the values worked out in Step 4 — and upload it with `uploadApiDefinition` as
-base64 `content` with a `filename`. Then run discovery against the returned `fileId`.
-
-### Step 4: Synthesize parameter values — top priority
-
-This is the point of the whole run. A discovered entrypoint whose parameters are empty
-or nonsensical fails server-side validation, never reaches the handler, and gives the
-later scan nothing worth mutating. Every path, query, body, and header value you emit
-has to be functional: accepted by the application, semantically correct, and a good
-seed for mutation and attack.
+This is the point of the whole run. An entrypoint whose parameters are empty or
+nonsensical fails server-side validation, never reaches the handler, and gives the later
+scan nothing worth mutating. Every path, query, body, and header value you emit has to be
+functional: accepted by the application, semantically correct, and a good seed for mutation
+and attack.
 
 Derive each value from evidence in the code, not from a guess:
 
@@ -68,38 +46,119 @@ Derive each value from evidence in the code, not from a guess:
   exist in the seeded data, so lookups resolve instead of 404ing.
 - **Specification examples** — reuse the `example`/`examples` values a shipped spec
   already provides.
+- **Real existing IDs** — read them from the running app or the seed data rather than
+  inventing them.
 
-Never register a placeholder such as `{}` or an empty string where the route logic
-clearly expects richer input. A value that passes validation but pins the request to one
-rigid shape is a poor seed; prefer realistic values that leave room for the scanner to
-mutate the type, length, and content.
+Then apply these rules:
 
-### Step 5: Register and verify
+- Build one representative, functional value set per operation. Do not register
+  combinatorial variants of optional parameters.
+- Include every required parameter, plus the optional ones that widen the attack surface
+  — filters, search, sort, pagination, IDs, free text, file and URL fields. Skip purely
+  cosmetic ones.
+- Values must pass server-side validation, reach the handler, and seed mutation well:
+  realistic rather than rigid — a non-trivial string, a real numeric ID, a valid email.
+- Never register `{}`, `""`, `string`, `0`, or `null` placeholders where the route logic
+  clearly expects richer input.
+- Bright parameter templates such as `{{entrypoint.params.query_limit}}` in a URL are the
+  platform's own templating and are fine.
 
-1. Call `listDiscoveryEntrypoints` for the `projectId` and `discoveryId`, and read each
-   one back with `getDiscoveryEntrypoint` to see the request discovery actually built.
-2. Compare that against the retained inventory from `analyze-codebase`. For any route
-   discovery missed, build the request with Step 4 values and add it with `addEntrypoint`
-   (`projectId`, `request` with `method`, `url`, `headers` as an object of
-   name→string array, and `body`; plus `authObjectId` and `repeaterId` when the target
-   needs them). Call `listEntrypoints` first and reuse a matching entrypoint instead of
-   creating a duplicate.
-3. Read connectivity back with `getEntrypoint`/`listEntrypoints`. An entrypoint that
-   reports `Problem`, `Unauthorized`, or a `401`/`403` is not registered correctly —
-   fix the auth object or the parameter values and iterate, do not keep it.
+### Step 3: Deduplicate semantically before every registration
 
-### Step 6: Debug coverage
+Deduplication is your judgement about operations, not a regex or a method-plus-path rule.
+Before each `addEntrypoint`, call `listEntrypoints` with the `projectId`, narrowed with `q`
+(a path fragment) and `method`, and decide whether an existing entrypoint already covers
+the same operation:
 
-If the crawl or spec run came back thin, inspect why before concluding the surface is
-small. Read `getDiscoveryWarnings` for routes the crawler could not reach or
-authenticate against, and `getDiscoveryLogs` for the request-level trace. Common causes
-are a missing or expired auth object, seed URLs that never link to the deeper routes, and
-a Repeater the target cannot be reached through.
+- Same handler, RPC, or operation means the same entrypoint, even when the query or body
+  parameter set or the values differ.
+- Parameter combinations of one handler collapse into one entrypoint whose request carries
+  the union of the parameters worth mutating.
+- Two transports of one handler — a gRPC-gateway RPC path and its REST mapping — are one
+  operation. Keep the one that exposes more mutable input (usually REST, with path and
+  query parameters); register the other only if it reaches input the first cannot.
+- Distinct operations stay distinct: a different handler, different method semantics on the
+  same path, or a different resource.
+- When an existing entrypoint covers the operation, reuse it — `editEntrypoint` to add the
+  missing parameters or better values — instead of creating a new one.
+
+Examples from a real run against Memos (Go, Echo, gRPC-gateway), which produced 75
+entrypoints:
+
+- `GET /api/v1/memo` registered five times — `?offset&limit`, `?rowStatus`,
+  `?rowStatus&limit`, `?creatorUsername&rowStatus&limit`, and bare. That is ONE entrypoint
+  carrying `creatorUsername`, `rowStatus`, `offset`, and `limit`.
+- `POST /api/v1/memo` registered twice, once manually and once by the crawl. That is one.
+- `POST /memos.api.v2.UserService/GetUser` next to `GET /api/v2/users/{username}`,
+  `.../ListResources` next to `/api/v2/resources`, and `.../ListUserAccessTokens` next to
+  `/api/v2/users/{username}/access_tokens` share a handler. Keep one per operation, unless
+  the second adds attack surface the first does not.
+- `GET /api/v1/memo` and `POST /api/v1/memo` are distinct operations. Keep both.
+
+### Step 4: Register and verify
+
+Exclude static noise first. Do not register:
+
+- CSS
+- images — png, jpg, gif, svg, webp, ico and favicons
+- fonts — woff, woff2, ttf, otf, eot
+- source maps (`.map`)
+- `manifest.json` and `*.webmanifest`, `robots.txt`, `sitemap.xml`, `humans.txt`, and
+  other non-executable static files
+
+Keep JavaScript — `.js`/`.mjs` application bundles, locale and chunk bundles, and service
+workers such as `sw.js` — because JS can carry vulnerabilities worth scanning. In the Memos
+run that means dropping `/assets/*.css` and `manifest.json` and keeping `/assets/*.js`, the
+locale bundles, and `sw.js`.
+
+Register each kept operation with `addEntrypoint`: `projectId`, `request` with `method`,
+`url`, `headers` as an object of name→string array, and `body`; plus `authObjectId` and
+`repeaterId` when the target needs them. Read connectivity back with
+`getEntrypoint`/`listEntrypoints`. An entrypoint that reports `Problem`, `Unauthorized`, or
+a `401`/`403` is not done — fix the auth object or the parameter values, `editEntrypoint`
+(or delete and re-add), and iterate until it is healthy. A `404` means the path is wrong:
+fix it, or drop it and record the reason.
+
+Optionally, the code-derived inventory can also be synthesized into an OpenAPI 3 document
+and uploaded with `uploadApiDefinition` (`projectId` plus `url`, or base64 `content` with a
+`filename`), then run through `runDiscovery` with the returned `fileId`, the `repeaters`
+array for private/local targets, and `authObjectId`. Its results pass Step 3 and the noise
+filter like anything else; direct registration remains the deliverable.
+
+### Step 5: Crawl only as a fallback
+
+Use `runDiscovery` with `crawlerUrls` ONLY when the Step 1 inventory is clearly incomplete:
+routes generated at runtime, plugin or route tables resolved at runtime, server-rendered
+pages not visible statically, or no source for part of the surface. State the justification
+explicitly in the run and in the Output. Never crawl just in case.
+
+Pass `projectId`, a descriptive `name`, `crawlerUrls` (seeds for the gap, not just the
+`baseUrl`), `repeaters` as a single-element array for private or local targets, and
+`authObjectId`. A user-supplied HAR may fill a gap the same way.
+
+When it completes, read the results with `listDiscoveryEntrypoints` and
+`getDiscoveryEntrypoint`, and run every one through the noise filter and Step 3. Remove
+semantic duplicates and noise with `deleteEntrypoint`, and give the survivors Step 2 values
+with `editEntrypoint`.
+
+If the crawl came back thin, inspect why before concluding the surface is small. Read
+`getDiscoveryWarnings` for routes the crawler could not reach or authenticate against, and
+`getDiscoveryLogs` for the request-level trace. Common causes are a missing or expired auth
+object, seed URLs that never link to the deeper routes, and a Repeater the target cannot be
+reached through.
+
+### Step 6: Final review
+
+Make one `listEntrypoints` pass over the project and confirm: no two entrypoints cover one
+operation, no static noise remains (JS kept), and every entrypoint is healthy with
+functional values.
 
 ### Output
 
 Return:
-- discovery mode(s) used, with the `discoveryId` for each
+- the discovery path used — whitebox, plus any fallback crawl or spec upload with its
+  `discoveryId`, and the justification for any crawl
 - registered entrypoint IDs with method, URL, and the populated parameter values
+- duplicates merged or pruned and noise excluded, with counts and examples
 - the auth object and Repeater used, if any
 - coverage gaps and the reason each route was missed or pruned

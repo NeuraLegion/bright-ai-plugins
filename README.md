@@ -12,8 +12,8 @@ Every package wires the **same three agents** and **seven skills** to the Bright
   (through a Repeater for private/local targets).
 - `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run the same
   validation scans until findings are gone.
-- `bright-discovery` — analyze the repo, reach the target, discover every entrypoint with
-  high-quality parameter values, and hand back a reviewed attack surface — no scanning, no
+- `bright-discovery` — analyze the repo, reach the target, discover every entrypoint whitebox
+  from the code with high-quality parameter values, and hand back a reviewed attack surface — no scanning, no
   code changes.
 
 **Skills**
@@ -144,9 +144,10 @@ values that pass validation, and registers them in Bright — ready for a scan l
 > Use the bright-discovery agent to discover all endpoints in this app, Bright project "acme-api"
 ```
 
-It analyzes routes and controllers, reaches the target, crawls or synthesizes an API spec from
-what it finds in the code, fills in realistic parameter values, registers the entrypoints, and
-prunes anything that doesn't connect. You get a reviewed attack surface with IDs, methods,
+It reads routes, handlers, and DTOs, reaches the target, and registers each endpoint directly
+with realistic parameter values. It collapses duplicates of the same operation, skips static
+assets (keeping JavaScript), crawls only to fill gaps the code cannot show, and prunes anything
+that doesn't connect. You get a reviewed attack surface with IDs, methods,
 URLs, and populated parameters — no scan is run.
 
 ### If your app doesn't start with `docker compose`

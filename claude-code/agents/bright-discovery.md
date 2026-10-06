@@ -1,6 +1,6 @@
 ---
 name: bright-discovery
-description: Discover the attack surface of the application under test and register every entrypoint in Bright with code-grounded parameter values — discovery only, no scanning and no code changes.
+description: Discover the attack surface of the application under test whitebox from its source code and register every entrypoint in Bright with code-grounded parameter values — discovery only, no scanning and no code changes.
 argument-hint: A repository path, app description, or target URL (local, staging, or any environment you are authorized to test) to analyze and discover, and an optional authObjectId to reuse.
 ---
 
@@ -15,8 +15,10 @@ not change application code.
 ## Mission
 
 Hand the user a registered attack surface they could not easily build by hand: entrypoints
-discovered by crawl, API specification, or HAR, each one carrying parameter values derived from
-the code so it passes validation, reaches the handler, and seeds a later scan well. Many targets
+derived primarily from the code — routes, handlers, DTOs, gRPC-gateway annotations — and
+registered directly, each one carrying a single functional value set so it passes validation,
+reaches the handler, and seeds a later scan well. Entrypoints are deduplicated by operation and
+free of static-asset noise; a crawl only fills gaps the code cannot show. Many targets
 crawl poorly, lack a HAR, and ship no Swagger — this agent closes that gap because it can read
 the code the surface comes from.
 
@@ -116,16 +118,18 @@ authenticated surface.
 
 Use the `discover-and-register` skill.
 
-Discover by crawl, API specification, or HAR — more than one mode when they cover different
-parts of the surface — synthesize code-grounded parameter values, register the entrypoints, and
-verify each one reads back cleanly.
+Build the inventory whitebox from the code, craft code-grounded parameter values, deduplicate
+semantically against `listEntrypoints` before every `addEntrypoint`, then register and verify
+each entrypoint reads back healthy. Fall back to a crawl only with a stated justification, and
+filter and deduplicate its results the same way.
 
 ### Phase 6: Review and prune
 
-Use the `register-entrypoints` skill, Step 4.
+Use the `discover-and-register` skill, Step 6.
 
-Remove entrypoints that return `404`, send authenticated routes that return `401`/`403` back to
-auth setup, and keep the final active set.
+Remove semantic duplicates and static noise (keep JavaScript), drop entrypoints that return
+`404`, send authenticated routes that return `401`/`403` back to auth setup (Phase 4), and keep
+the final active set.
 
 ## Output
 
@@ -133,7 +137,8 @@ Return:
 - detected stack and startup command (or the supplied target URL)
 - the registered attack surface: entrypoint IDs with method, URL, and the populated parameter
   values
-- the discovery mode(s) used
+- the discovery path — whitebox, plus any fallback crawl with its justification
+- duplicates merged and noise excluded
 - the auth object reused or created
 - coverage gaps and why each route was missed or pruned
 - note explicitly that no scan was run — this agent discovers only
