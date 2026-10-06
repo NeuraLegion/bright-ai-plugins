@@ -37,6 +37,7 @@ PACKAGES = ["antigravity", "claude-code", "codex", "cursor", "github-copilot"]
 
 SHARED_SKILLS = [
     "analyze-codebase",
+    "discover-and-register",
     "fix-and-validate",
     "register-entrypoints",
     "run-scan",
@@ -44,7 +45,7 @@ SHARED_SKILLS = [
     "setup-repeater",
 ]
 
-AGENTS = ["bright-application-testing", "bright-remediation-loop"]
+AGENTS = ["bright-application-testing", "bright-discovery", "bright-remediation-loop"]
 
 # Where each agent lives per tool. Codex and Antigravity have no agent concept,
 # so they ship the orchestration prompts as skills instead.
