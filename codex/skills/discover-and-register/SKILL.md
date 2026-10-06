@@ -17,12 +17,21 @@ from the `analyze-codebase` inventory and complete it by reading:
 - proto/gRPC-gateway annotations (`google.api.http` gives the REST path and method)
 - DTOs, validators, and request schemas
 - OpenAPI/Swagger annotations or a shipped specification
+- the built frontend, if the app serves one: list its JavaScript from the script tags and
+  service-worker registration of the served `index.html` (`curl` the `baseUrl`) and/or the
+  build output directory (e.g. `dist/`, an embedded-frontend package). Record each bundle
+  as GET with no auth
 
 For every operation record the method, the full path including mount prefixes, the
 path/query/header/body parameters, the content type, the auth requirement, and the handler
-identity (file plus function, or RPC name). Also note the surface the code cannot reveal —
-routes built at runtime, plugin route tables, server-rendered pages that are not statically
-visible, parts with no source in the repository. That list is the only input to Step 5.
+identity (file plus function, or RPC name). Query parameters must be the complete list of
+everything the handler reads: framework accessors (e.g. `QueryParam(...)`,
+`request.args`, `req.query`), bind/struct/DTO tags, and, for gRPC-gateway, request-message
+fields not bound to the path or `body`, which become query parameters on GET.
+
+Also note the surface the code cannot reveal — routes built at runtime, plugin route
+tables, server-rendered pages that are not statically visible, parts with no source in the
+repository. That list is the only input to Step 5.
 Reuse the `projectId` resolved in `setup-repeater` for every call here.
 
 ### Step 2: Craft parameter values — top priority
@@ -35,7 +44,14 @@ and attack.
 
 Derive each value from evidence in the code, not from a guess:
 
-- **Enums and constants** — use a real member, not an invented string.
+- **Enums and constants** — use the exact member, with exact casing, from the enum or
+  const definition (e.g. `OAUTH2`, not `oauth2`). When a field names a setting or key from
+  an enumerated set, use a real one (e.g. a system-setting `name` from its enum, not
+  `"test"`).
+- **Encoded fields** — when the handler decodes a string field as JSON (or base64, etc.),
+  encode the value that way (e.g. a setting `value` of `"\"en\""`, not `"en"`).
+- **Framework conventions** — e.g. gRPC-gateway Update RPCs that take a FieldMask need an
+  `update_mask` listing the fields being set, or they are rejected.
 - **Types and formats** — match the declared type, and honour format hints such as
   email, UUID, date-time, or URI.
 - **Regex and validation rules** — satisfy the pattern, length bounds, and required
@@ -46,8 +62,12 @@ Derive each value from evidence in the code, not from a guess:
   exist in the seeded data, so lookups resolve instead of 404ing.
 - **Specification examples** — reuse the `example`/`examples` values a shipped spec
   already provides.
-- **Real existing IDs** — read them from the running app or the seed data rather than
-  inventing them.
+- **Dependent objects** — read real IDs from the running app or the seed data rather than
+  inventing them. When a route needs an object that does not exist yet (e.g. a child
+  resource, a referenced identity provider, a relation between two records), create it
+  first through the application's API with `curl` against `baseUrl` and the run's
+  credentials, and use its real ID. If you cannot create it, record the route as a gap
+  instead of registering a guaranteed 404.
 
 Then apply these rules:
 
@@ -55,7 +75,9 @@ Then apply these rules:
   combinatorial variants of optional parameters.
 - Include every required parameter, plus the optional ones that widen the attack surface
   — filters, search, sort, pagination, IDs, free text, file and URL fields. Skip purely
-  cosmetic ones.
+  cosmetic ones. Every attack-relevant query parameter from Step 1 goes into the URL; a
+  GET entrypoint without query parameters when its handler reads them (e.g. a list
+  endpoint with filter and pagination parameters) is a defect.
 - Values must pass server-side validation, reach the handler, and seed mutation well:
   realistic rather than rigid — a non-trivial string, a real numeric ID, a valid email.
 - Never register `{}`, `""`, `string`, `0`, or `null` placeholders where the route logic
@@ -112,15 +134,48 @@ Exclude static noise first. Do not register:
 Keep JavaScript — `.js`/`.mjs` application bundles, locale and chunk bundles, and service
 workers such as `sw.js` — because JS can carry vulnerabilities worth scanning. In the Memos
 run that means dropping `/assets/*.css` and `manifest.json` and keeping `/assets/*.js`, the
-locale bundles, and `sw.js`.
+locale bundles, and `sw.js`. Without a crawl, take them from Step 1's served-frontend list
+and register each bundle as GET without `authObjectId`.
+
+Bright sends the real request to the target on every `addEntrypoint` and `editEntrypoint`,
+so registration has side effects. Register reads and creates first, then updates, and
+destructive operations (delete, deactivate, reset, purge, vacuum, revoke…) last. Point
+destructive operations only at sacrificial objects created for that purpose (Step 2's
+dependent-objects rule). Never target the user, session, or credential the auth object
+depends on, or objects other entrypoints reference — in one run, deleting the only user
+broke the auth object and every later registration. This complements, not replaces, the
+agent's rule to exclude effects that cannot be undone.
 
 Register each kept operation with `addEntrypoint`: `projectId`, `request` with `method`,
 `url`, `headers` as an object of name→string array, and `body`; plus `authObjectId` and
-`repeaterId` when the target needs them. Read connectivity back with
-`getEntrypoint`/`listEntrypoints`. An entrypoint that reports `Problem`, `Unauthorized`, or
-a `401`/`403` is not done — fix the auth object or the parameter values, `editEntrypoint`
-(or delete and re-add), and iterate until it is healthy. A `404` means the path is wrong:
-fix it, or drop it and record the reason.
+`repeaterId` when the target needs them. It returns only `entrypointId`, so success says
+nothing about health.
+
+Check health after every `addEntrypoint` and `editEntrypoint` — this is mandatory. Call
+`getEntrypoint` (`projectId`, `entrypointId`) and read `response.status`,
+`response.headers["content-type"]`, and `response.body`. Healthy means the success status
+the handler returns, with the content type it produces. Unhealthy means any of:
+
+- no `response` object — Bright got no answer; check the auth object with `testAuth` and
+  the target/Repeater
+- any 4xx or 5xx
+- a `text/html` SPA `index.html` shell on a route that should return JSON or a file
+
+The top-level `status` (`new`/`changed`/`tested`/`vulnerable`) is the security status, not
+health. If the tool also returns `connectivity`, anything other than `ok` is unhealthy.
+
+A `401`/`403` or no response on an authenticated route goes back to auth setup first.
+Otherwise, when unhealthy, read the error in `response.body`, fix the values or the path
+with `editEntrypoint`, and check again — at most 3 attempts. Then, if the handler answered
+with a 4xx, keep the entrypoint and record it as unhealthy with its status and message. If
+the request never reached the handler (404, SPA shell, no response), remove it with
+`deleteEntrypoint` and record it as a gap with the reason.
+
+If `addEntrypoint` or `editEntrypoint` fails with "Cannot access the target" (or a similar
+unreachable-target error), stop registering and keep a list of the failed requests. `curl`
+the `baseUrl` and check `listRepeaters` until the Repeater's `status` is `connected`,
+restarting the Repeater (`setup-repeater` Step 3) and/or the app as needed. Then retry
+exactly the failed registrations before continuing.
 
 Optionally, the code-derived inventory can also be synthesized into an OpenAPI 3 document
 and uploaded with `uploadApiDefinition` (`projectId` plus `url`, or base64 `content` with a
@@ -156,16 +211,28 @@ reached through.
 ### Step 6: Final review
 
 Read every entrypoint in the project with `listEntrypoints` (`limit: 100`, following `next`
-until it runs out; the default page is only 10) and confirm: no two entrypoints cover one
-operation, no static noise remains (JS kept), and every entrypoint is healthy with
-functional values.
+until it runs out; the default page is only 10). Then:
+
+1. Diff the Step 1 inventory (operations and JS) against that list. Register anything
+   missing, or record it as a gap with a reason.
+2. Call `getEntrypoint` for every entrypoint — `listEntrypoints` carries no parameters and
+   no health. From those results build the final table: ID, method, URL, the parameters
+   actually stored in `request` (URL query, body, headers), and `response.status` with its
+   content type.
+3. Confirm no two entrypoints cover one operation, no static noise remains (JS kept), and
+   every entrypoint is healthy with functional values, or is recorded as unhealthy.
 
 ### Output
+
+Build the Output only from the Step 6 `listEntrypoints` and `getEntrypoint` results. Do not
+claim anything Bright's responses do not support — "all healthy" when some are not,
+parameters that are not in `request`, or "excluded X" while X is registered.
 
 Return:
 - the discovery path used — whitebox, plus any fallback crawl or spec upload with its
   `discoveryId`, and the justification for any crawl
-- registered entrypoint IDs with method, URL, and the populated parameter values
+- registered entrypoint IDs with method, URL, the parameter values stored in `request`,
+  and the `response.status` Bright recorded; list unhealthy entrypoints separately
 - duplicates merged or pruned and noise excluded, with counts and examples
 - the auth object and Repeater used, if any
 - coverage gaps and the reason each route was missed or pruned

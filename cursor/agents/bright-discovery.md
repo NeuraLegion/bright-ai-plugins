@@ -120,30 +120,37 @@ Use the `discover-and-register` skill.
 
 Build the inventory whitebox from the code, craft code-grounded parameter values, deduplicate
 semantically against `listEntrypoints` before every `addEntrypoint`, then register and verify
-each entrypoint reads back healthy. Fall back to a crawl only with a stated justification, and
+each entrypoint reads back healthy. Registration sends the real request, so register
+destructive operations last and only against sacrificial objects, never the auth user. Read
+health from `getEntrypoint` after every add or edit, and retry failed registrations once the
+Repeater or target recovers. Fall back to a crawl only with a stated justification, and
 filter and deduplicate its results the same way.
 
 ### Phase 6: Review and prune
 
 Use the `discover-and-register` skill, Step 6.
 
+Diff the Step 1 inventory against `listEntrypoints` and register or record what is missing.
 Remove semantic duplicates and static noise (keep JavaScript), drop entrypoints that return
 `404`, send authenticated routes that return `401`/`403` back to auth setup (Phase 4), and keep
-the final active set.
+the final active set. Finish with a `getEntrypoint` read of every entrypoint.
 
 ## Output
 
 Return:
 - detected stack and startup command (or the supplied target URL)
-- the registered attack surface: entrypoint IDs with method, URL, and the populated parameter
-  values
+- the registered attack surface: entrypoint IDs with method, URL, the stored parameter values
+  and the response status Bright recorded (from `getEntrypoint`), unhealthy ones listed
+  separately
 - the discovery path — whitebox, plus any fallback crawl with its justification
 - duplicates merged and noise excluded
 - the auth object reused or created
+- the Repeater outcome: deleted, kept at the caller's request, or reused
 - coverage gaps and why each route was missed or pruned
 - note explicitly that no scan was run — this agent discovers only
 
 ## Cleanup
 
-Always stop temporary processes you started and remove the short-lived Repeater
-if you created one for the session.
+Always stop temporary processes you started (the Repeater CLI, the application). If this run
+created the Repeater, confirm its ID with `listRepeaters` and remove it with `deleteRepeater`
+unless the caller asked to keep it. Never delete a reused Repeater. Say which happened.
