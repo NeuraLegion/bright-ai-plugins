@@ -76,7 +76,10 @@ the same operation:
   the union of the parameters worth mutating.
 - Two transports of one handler — a gRPC-gateway RPC path and its REST mapping — are one
   operation. Keep the one that exposes more mutable input (usually REST, with path and
-  query parameters); register the other only if it reaches input the first cannot.
+  query parameters); register the other only if it reaches input the first cannot. A
+  `q` + `method` lookup cannot find these pairs because both the method and the path
+  differ: match them by the handler identity recorded in Step 1, and search by the
+  resource fragment (for example `users`) without a `method` filter.
 - Distinct operations stay distinct: a different handler, different method semantics on the
   same path, or a different resource.
 - When an existing entrypoint covers the operation, reuse it — `editEntrypoint` to add the
@@ -136,10 +139,13 @@ Pass `projectId`, a descriptive `name`, `crawlerUrls` (seeds for the gap, not ju
 `baseUrl`), `repeaters` as a single-element array for private or local targets, and
 `authObjectId`. A user-supplied HAR may fill a gap the same way.
 
-When it completes, read the results with `listDiscoveryEntrypoints` and
-`getDiscoveryEntrypoint`, and run every one through the noise filter and Step 3. Remove
-semantic duplicates and noise with `deleteEntrypoint`, and give the survivors Step 2 values
-with `editEntrypoint`.
+When it completes, read the results with `listDiscoveryEntrypoints` (page through all of
+them with `limit: 100` and `next`) and `getDiscoveryEntrypoint`, and run every one through
+the noise filter and Step 3. Discovery results are discovery-scoped; `deleteEntrypoint` and
+`editEntrypoint` need the project entrypoint ID they map to. Take it from the discovery
+entry's target entrypoint mapping, or find the same method and URL with `listEntrypoints`.
+Remove semantic duplicates and noise with `deleteEntrypoint`, and give the survivors Step 2
+values with `editEntrypoint`.
 
 If the crawl came back thin, inspect why before concluding the surface is small. Read
 `getDiscoveryWarnings` for routes the crawler could not reach or authenticate against, and
@@ -149,7 +155,8 @@ reached through.
 
 ### Step 6: Final review
 
-Make one `listEntrypoints` pass over the project and confirm: no two entrypoints cover one
+Read every entrypoint in the project with `listEntrypoints` (`limit: 100`, following `next`
+until it runs out; the default page is only 10) and confirm: no two entrypoints cover one
 operation, no static noise remains (JS kept), and every entrypoint is healthy with
 functional values.
 
