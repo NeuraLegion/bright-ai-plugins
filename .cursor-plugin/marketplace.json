@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Bright Security DAST agents and skills — scan, triage, and remediate application and API vulnerabilities from your editor via the Bright MCP server.",
-    "version": "1.0.0"
+    "version": "0.1.0"
   },
   "plugins": [
     {
