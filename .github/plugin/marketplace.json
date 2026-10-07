@@ -1,6 +1,6 @@
 {
   "name": "brightsec",
-  "description": "Bright Security DAST agents and skills — scan, triage, and remediate application and API vulnerabilities via the Bright MCP server.",
+  "description": "Bright Security DAST agents and skills — discover endpoints from code, scan, triage, and remediate application and API vulnerabilities via the Bright MCP server.",
   "owner": {
     "name": "Bright Security",
     "email": "support@brightsec.com"
@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "bright-security",
-      "description": "Bright DAST scanning and remediation for Copilot CLI: analyze the app, run scans through a Repeater, and fix findings via the Bright MCP server.",
-      "version": "0.1.0",
+      "description": "Bright DAST discovery, scanning, and remediation for Copilot CLI: register endpoints from the code, run scans through a Repeater, and fix findings via the Bright MCP server.",
+      "version": "0.2.0",
       "source": "./github-copilot"
     }
   ]

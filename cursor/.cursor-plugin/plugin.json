@@ -1,8 +1,8 @@
 {
   "name": "bright-security",
   "displayName": "Bright Security",
-  "version": "0.1.0",
-  "description": "Bright DAST scanning and remediation automation for Cursor using the Bright MCP server.",
+  "version": "0.2.0",
+  "description": "Bright DAST discovery, scanning, and remediation automation for Cursor using the Bright MCP server.",
   "author": {
     "name": "Bright Security",
     "email": "support@brightsec.com"
@@ -13,7 +13,8 @@
     "bright",
     "dast",
     "security",
-    "mcp"
+    "mcp",
+    "discovery"
   ],
   "homepage": "https://docs.brightsec.com",
   "repository": "https://github.com/NeuraLegion/bright-ai-plugins",
