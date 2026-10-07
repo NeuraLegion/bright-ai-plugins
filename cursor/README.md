@@ -1,7 +1,7 @@
 # Bright Security — Cursor plugin
 
 Bright DAST (Dynamic Application Security Testing) agents and skills, packaged for Cursor.
-The plugin wires two orchestration agents and six skills to the **Bright MCP server**, so Cursor
+The plugin wires three orchestration agents and six skills to the **Bright MCP server**, so Cursor
 can analyze an app, reach a target, register attack surface, run scans, and remediate findings —
 in desktop Cursor or in Cursor Cloud Agents.
 
@@ -11,6 +11,9 @@ in desktop Cursor or in Cursor Cloud Agents.
     attack surface, and run DAST scans (through a Repeater for private/local targets).
   - `bright-remediation-loop` — reproduce findings with DAST, apply minimal fixes, restart the
     app, and re-run validation scans until findings are gone.
+  - `bright-discovery` — analyze the repo, reach the target, build the endpoint list from the
+    code, register the endpoints in Bright with values that pass validation, and report what it
+    couldn't register and why — no scanning, no code changes.
 - **Skills** (`skills/`) — `analyze-codebase`, `setup-repeater`, `setup-auth`,
   `register-entrypoints`, `run-scan`, `fix-and-validate`. The agents call these as building blocks.
 - **MCP** (`mcp.json`) — the Bright MCP server over HTTP.
@@ -48,7 +51,7 @@ marketplace, and click **Install**. You can also browse and install from
 [cursor.com/marketplace](https://cursor.com/marketplace).
 
 **3. Enable the MCP server.** After install, confirm the **brightsec** MCP server is enabled in
-Customize (or Cursor Settings → MCP), and that the two Bright agents appear.
+Customize (or Cursor Settings → MCP), and that the three Bright agents appear.
 
 > Prefer not to install? See [Use without installing](#use-without-installing) below.
 
@@ -61,6 +64,7 @@ Ask for an agent in chat — Cursor delegates to it based on the task:
 ```
 Use the bright-application-testing agent to scan this app
 Use the bright-remediation-loop agent to scan, fix, and re-verify
+Use the bright-discovery agent to discover and register this app's endpoints
 ```
 
 You can also pick the agent explicitly from Cursor's agent selector. Scan any target you own or are

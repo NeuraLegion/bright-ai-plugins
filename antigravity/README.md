@@ -5,10 +5,11 @@ Google's **Antigravity CLI** (`agy`, the successor to the Gemini CLI). The plugi
 Bright skills; the Bright MCP server gives `agy` the tools to configure Bright, run scans, and
 retrieve findings.
 
-Antigravity has no separate "agent" type, so the two orchestration workflows ship as **skills**
+Antigravity has no separate "agent" type, so the three orchestration workflows ship as **skills**
 alongside the six step skills:
 
-- **Orchestration skills:** `bright-application-testing`, `bright-remediation-loop`
+- **Orchestration skills:** `bright-application-testing`, `bright-remediation-loop`,
+  `bright-discovery`
 - **Step skills:** `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`,
   `run-scan`, `fix-and-validate`
 
@@ -72,6 +73,7 @@ Start `agy` and describe the task:
 agy
 AGY> Run a Bright DAST scan on this app and summarize findings
 AGY> Scan, fix the findings, and re-verify
+AGY> Use the bright-discovery skill to discover and register this app's endpoints
 ```
 
 Non-interactive/scripted runs use `-p`; add `--dangerously-skip-permissions` to auto-approve tool

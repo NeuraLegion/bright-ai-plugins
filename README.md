@@ -12,9 +12,9 @@ Every package wires the **same three agents** and **six skills** to the Bright M
   (through a Repeater for private/local targets).
 - `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run the same
   validation scans until findings are gone.
-- `bright-discovery` — analyze the repo, reach the target, discover every entrypoint whitebox
-  from the code with high-quality parameter values, and hand back a reviewed attack surface — no scanning, no
-  code changes.
+- `bright-discovery` — analyze the repo, reach the target, build the endpoint list from the code,
+  register the endpoints in Bright with values that pass validation, and report what it couldn't
+  register and why — no scanning, no code changes.
 
 **Skills**
 - `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `run-scan`, `fix-and-validate`
@@ -39,7 +39,7 @@ Marketplace manifests live at the repo root — `.cursor-plugin/marketplace.json
 `bright-security`.
 
 ## Required environment (all packages)
-- `BRIGHT_HOSTNAME` — Bright cluster hostname (e.g. `app.brightsec.com`)
+- `BRIGHT_HOSTNAME` — Bright cluster hostname, host only, no `https://` (e.g. `app.brightsec.com`)
 - `BRIGHT_TOKEN` — Bright API token (used by the MCP server and the Bright CLI Repeater)
 - **A Bright project** — everything a run creates (Repeater, auth object, entrypoints, scans)
   is scoped to one project. With a **project-scoped** `BRIGHT_TOKEN` there is only one project
@@ -69,7 +69,7 @@ second agent closes the loop by proving the fix, instead of leaving you a report
 | Does | Scans and reports | Scans, edits code, re-scans until the finding is gone | Discovers attack surface and registers entrypoints |
 | Touches your code | No | **Yes** | No |
 | Also needs | — | A way to get fixes into the running target | — |
-| Reach for it when | You want to know what's exposed | You want it fixed and the fix proved | Your targets are hard to crawl, you lack Swagger/HAR files, or you want a complete attack surface inventory before scanning |
+| Reach for it when | You want to know what's exposed | You want it fixed and the fix proved | Your targets are hard to crawl, you lack Swagger/HAR files, or you want the endpoints from your code registered and checked before scanning |
 
 The remediation loop's value is the *proof*: a finding counts as fixed only when the same scan,
 over the same entrypoints and tests, stops reporting it. That requires your edited code to be
@@ -137,18 +137,18 @@ will stop and ask before spending a scan rather than reporting unverified edits 
 ### 5. Map the attack surface without scanning
 
 Your targets crawl poorly, you have no Swagger spec, and you don't want to hand-build HAR
-files. The discovery agent reads the code, discovers every endpoint, works out parameter
+files. The discovery agent reads the code, builds the endpoint list from it, works out parameter
 values that pass validation, and registers them in Bright — ready for a scan later.
 
 ```
-> Use the bright-discovery agent to discover all endpoints in this app, Bright project "acme-api"
+> Use the bright-discovery agent to discover and register this app's endpoints, Bright project "acme-api"
 ```
 
 It reads routes, handlers, and DTOs, reaches the target, and registers each endpoint directly
 with realistic parameter values. It collapses duplicates of the same operation, skips static
 assets (keeping JavaScript), crawls only to fill gaps the code cannot show, and prunes anything
-that doesn't connect. You get a reviewed attack surface with IDs, methods,
-URLs, and populated parameters — no scan is run.
+that doesn't connect. You get a checked entrypoint list — IDs, methods, URLs, populated
+parameters, health — with unhealthy entrypoints and gaps named. No scan is run.
 
 ### If your app doesn't start with `docker compose`
 

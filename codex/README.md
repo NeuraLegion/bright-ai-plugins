@@ -4,10 +4,11 @@ Bright DAST (Dynamic Application Security Testing) workflows, packaged for Codex
 bundles the Bright skills; the Bright MCP server gives Codex the tools to configure Bright, run
 scans, and retrieve findings.
 
-Codex has no separate "agent" type, so the two orchestration workflows ship as **skills** alongside
+Codex has no separate "agent" type, so the three orchestration workflows ship as **skills** alongside
 the six step skills:
 
-- **Orchestration skills:** `bright-application-testing`, `bright-remediation-loop`
+- **Orchestration skills:** `bright-application-testing`, `bright-remediation-loop`,
+  `bright-discovery`
 - **Step skills:** `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`,
   `run-scan`, `fix-and-validate`
 
@@ -55,6 +56,7 @@ The orchestration workflows are skills — invoke one with `$skill-name`, or jus
 ```
 $bright-application-testing scan this app
 $bright-remediation-loop scan, fix, and re-verify
+$bright-discovery discover and register this app's endpoints
 ```
 
 Scan any target you own or are authorized to test (local, staging, or another authorized
