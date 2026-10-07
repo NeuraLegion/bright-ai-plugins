@@ -43,9 +43,16 @@ the code the surface comes from.
   shell environment. Verify both with `test -n` as the very first step and stop with a clear
   instruction to export what is missing and restart the session — never ask the user to paste
   the token into the conversation, and never work around a missing one.
-- Exclude endpoints whose effects the user cannot undo in this environment — irreversible
-  state changes, out-of-band side effects, or anything that would revoke the run's own access.
-  Judge this from the handler, not from the HTTP method or a field name.
+- Exclude an endpoint only when the handler code shows it is **guaranteed to break the run's or
+  the scan's own access**, or it is **irreversible in this environment** (out-of-band side
+  effects, cross-system state changes). Endpoints that are dangerous only under fuzzing must be
+  registered, not excluded, and listed in the Output under a **scan-risk** heading with a
+  one-line reason each. Examples of the scan-risk kind: global system settings whose fuzzed
+  values could disable password login or signup; updating the auth user's own profile, where a
+  fuzzed update mask could change username or password. Every exclusion must cite the handler
+  evidence. For this agent, `analyze-codebase` has its own unsafe-endpoint exclusions;
+  re-evaluate them under this rule — a `signout` that only clears a cookie does not revoke the
+  bearer token, and a `POST /user` is undoable through `DELETE /user/:id`.
 - Reach the target the way the user described. Their instruction outranks anything inferred
   from the repository. When they described nothing, work the startup out from the repository,
   bring the application up locally, and say what you chose — do not stop to ask.
@@ -62,7 +69,7 @@ the code the surface comes from.
 
 ### Phase 1: Analyze the codebase
 
-Use the `analyze-codebase` skill.
+**Before doing anything in Phase 1, invoke the `analyze-codebase` skill (using the Skill tool) and read its full instructions. Do not work from the summary below. Skipping this skill is a failure.**
 
 Collect:
 - languages, frameworks, databases, and startup clues
@@ -103,35 +110,29 @@ target is reached directly.
 
 ### Phase 3: Configure the Repeater
 
-Use the `setup-repeater` skill.
+**Invoke the `setup-repeater` skill before proceeding. Do not work from the summary below.**
 
-1. Resolve the Bright project, asking only when the token reaches more than one and the user
-   named none.
-2. Create or reuse a dedicated Repeater when the target is private/local.
-3. Start the Repeater with `BRIGHT_HOSTNAME` and `BRIGHT_TOKEN`, on the same cluster the MCP server is registered against.
-4. Verify that Bright reports the Repeater as connected.
+Resolve the Bright project, create or reuse a Repeater for private/local targets, start it, and
+verify connectivity.
 
 ### Phase 4: Resolve authentication
+
+**Invoke the `setup-auth` skill before proceeding. Do not work from the summary below.**
 
 Resolve a working auth object before discovery, so crawls and spec runs reach the
 authenticated surface.
 
 1. **A caller supplied an `authObjectId`.** Fetch it with `getAuth`, confirm it with `testAuth`,
    and reuse it. Only fall through to detection if it does not verify.
-2. **Otherwise** use the `setup-auth` skill to detect whether auth is required and create a
-   verified auth object when it is.
+2. **Otherwise** use the skill to detect whether auth is required and create a verified auth
+   object when it is.
 
 ### Phase 5: Discover and register
 
-Use the `discover-and-register` skill.
+**Invoke the `discover-and-register` skill before proceeding. Do not work from the summary below.**
 
 Build the inventory whitebox from the code, craft code-grounded parameter values, deduplicate
-semantically against `listEntrypoints` before every `addEntrypoint`, then register and verify
-each entrypoint reads back healthy. Registration sends the real request, so register
-destructive operations last and only against sacrificial objects, never the auth user. Read
-health from `getEntrypoint` after every add or edit, and retry failed registrations once the
-Repeater or target recovers. Fall back to a crawl only with a stated justification, and
-filter and deduplicate its results the same way.
+semantically, register, verify health, and fall back to crawl only when justified.
 
 ### Phase 6: Review and prune
 
@@ -145,19 +146,23 @@ the final active set. Finish with a `getEntrypoint` read of every entrypoint.
 ## Output
 
 Return:
+- **skills loaded:** list every skill actually invoked via the Skill tool during this run
 - detected stack and startup command (or the supplied target URL)
 - the registered attack surface: entrypoint IDs with method, URL, the stored parameter values
   and the response status Bright recorded (from `getEntrypoint`), unhealthy ones listed
   separately
+- **scan-risk entrypoints:** operations registered but flagged as dangerous under fuzzing, with
+  a one-line reason each citing handler evidence
 - the discovery path — whitebox, plus any fallback crawl with its justification
 - duplicates merged and noise excluded
 - the auth object reused or created
-- the Repeater outcome: deleted, kept at the caller's request, or reused
+- the Repeater outcome: kept (with its ID), or reused
 - coverage gaps and why each route was missed or pruned
 - note explicitly that no scan was run — this agent discovers only
 
 ## Cleanup
 
-Always stop temporary processes you started (the Repeater CLI, the application). If this run
-created the Repeater, confirm its ID with `listRepeaters` and remove it with `deleteRepeater`
-unless the caller asked to keep it. Never delete a reused Repeater. Say which happened.
+Always stop temporary processes you started (the Repeater CLI, the application). Stop the
+Repeater CLI process you started. **Do NOT delete the Repeater record in Bright** — the auth
+object and entrypoints reference it, and a scan usually follows discovery. Note in the Output
+which Repeater was kept. Never delete a reused Repeater. Say which happened.

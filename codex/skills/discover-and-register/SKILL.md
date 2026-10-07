@@ -137,6 +137,40 @@ run that means dropping `/assets/*.css` and `manifest.json` and keeping `/assets
 locale bundles, and `sw.js`. Without a crawl, take them from Step 1's served-frontend list
 and register each bundle as GET without `authObjectId`.
 
+**Apply the exclusion rule**
+
+Exclude an operation only when the handler code shows it is guaranteed to break the run's or the
+scan's own access, or it is irreversible in this environment. Register everything else, including
+endpoints that are dangerous only under fuzzing. For those, after registering them, list them in
+the Output under a "**Scan-risk entrypoints**" heading with a one-line reason each. Examples:
+
+- **Exclude:** an endpoint that revokes the current session or bearer token server-side (not one
+  that only clears a cookie); an endpoint that deletes the auth user or changes their password
+  without user input; a global kill-switch that shuts down the application.
+- **Scan-risk (register, then flag):** global system settings (`disable-password-login`,
+  `allow-signup`) whose fuzzed values could lock out login; updating the auth user's own profile
+  where a fuzzed update mask could change `username`/`password`/`role`; a `signout` endpoint
+  that does revoke tokens server-side.
+
+Cite the handler file and line or function name for every exclusion and every scan-risk flag.
+
+**Health checkpoints**
+
+Checking health after every single registration is too costly. Instead, check at these critical
+points:
+
+- After the **first registration of each kind** — the first public/unauthenticated entrypoint,
+  the first authenticated entrypoint, and the first mutating (POST/PUT/PATCH) entrypoint — call
+  `getEntrypoint` and read its health before continuing with more of that kind. If unhealthy
+  because of something systemic (auth object no longer works, Repeater disconnected, wrong base
+  URL, wrong content type expected by the framework), fix the cause before registering more.
+- After **each destructive registration** (DELETE, or operations like deactivate/reset/purge/
+  revoke/vacuum), verify the auth object still works before continuing. Use `testAuth` with the
+  saved `authObjectId`, or call `getEntrypoint` on an already-registered authenticated read
+  entrypoint and confirm it still returns success.
+- Keep the full read-back and fix pass at the end (the existing Step 4 health-check logic
+  starting below).
+
 Bright sends the real request to the target on every `addEntrypoint` and `editEntrypoint`,
 so registration has side effects. Register reads and creates first, then updates, and
 destructive operations (delete, deactivate, reset, purge, vacuum, revoke…) last. Point
@@ -233,6 +267,8 @@ Return:
   `discoveryId`, and the justification for any crawl
 - registered entrypoint IDs with method, URL, the parameter values stored in `request`,
   and the `response.status` Bright recorded; list unhealthy entrypoints separately
+- **scan-risk entrypoints:** operations registered but flagged as dangerous under fuzzing, with
+  a one-line reason each citing handler evidence
 - duplicates merged or pruned and noise excluded, with counts and examples
 - the auth object and Repeater used, if any
 - coverage gaps and the reason each route was missed or pruned

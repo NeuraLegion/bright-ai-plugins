@@ -64,8 +64,17 @@ run. Never resolve it a second time.
 ### Step 2: Create or reuse a Repeater (private/local targets)
 
 1. Call `listRepeaters` for the project.
-2. Reuse a healthy Repeater that is clearly scoped to this application when possible.
-3. Otherwise create one with `createRepeater`, using a descriptive name such as `bright-<repo-name>`.
+2. Look for a reusable Repeater: one that is already associated with the resolved project, or
+   whose name matches the target or run (e.g. `bright-<repo-name>`, `<app>-discovery`). It must
+   be one that nobody is using right now: `status` is `disconnected`, or `connected` only because
+   of this run's own CLI process that you started earlier in this session.
+3. **Never take over a Repeater that is `connected` and in use by someone else.** That breaks
+   their scans or discoveries.
+4. If several candidates qualify, pick the most specific name match (exact repo/app name over a
+   generic one) and note which one was reused.
+5. Create a new Repeater with `createRepeater` only when nothing reusable exists. Use a
+   descriptive name such as `bright-<repo-name>`.
+6. Record the `repeaterId` (reused or created) for Step 3 and the Output.
 
 ### Step 3: Start the Repeater
 
@@ -106,4 +115,4 @@ Return:
 - `projectId`
 - `projectName`
 - `repeaterId` (or note that the target is public and no Repeater is needed)
-- whether the Repeater was reused or created for this run
+- whether the Repeater was reused (with its ID and name) or created for this run
