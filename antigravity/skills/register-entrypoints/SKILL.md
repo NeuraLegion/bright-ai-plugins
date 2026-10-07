@@ -1,6 +1,6 @@
 ---
 name: register-entrypoints
-description: Complete the endpoint inventory from the source code and register every operation in Bright with code-grounded, functional parameter values — deduplicated by operation, JavaScript kept and static noise dropped, health verified from the response Bright recorded — crawling only as a justified fallback.
+description: Build the endpoint inventory from the source code and register its operations in Bright with code-grounded, functional parameter values — deduplicated by operation, JavaScript kept and static noise dropped, health read from the response Bright recorded, gaps named — crawling only as a justified fallback.
 ---
 
 ## Register Entrypoints
@@ -25,7 +25,9 @@ verify it from the code, recording for every operation:
 - the handler identity (file plus function, or RPC name), which Step 3 relies on
 - if the app serves a built frontend: the JavaScript the served `index.html` references (`curl`
   the `baseUrl`), the service worker it registers, and the chunks those bundles load, or the build
-  output directory (e.g. `dist/`). Record each as GET with no auth
+  output directory (e.g. `dist/`). Record each as GET with no auth. If the repository has frontend
+  source but the served `index.html` references no bundle, record JavaScript as a coverage gap:
+  the frontend was not built or not served
 
 Also list the surface the code cannot reveal — routes built at runtime, plugin route tables,
 server-rendered pages that are not statically visible, parts with no source in the repository.
@@ -128,11 +130,12 @@ returns `connectivity`, anything other than `ok` is unhealthy.
 
 Check health at these points, and leave the rest to Step 7:
 
-- after the first registration of each kind — public, authenticated, mutating — before
-  registering more of that kind. Fix a systemic cause (auth object, Repeater, base URL, the
-  content type the framework expects) before continuing
-- after each destructive registration: confirm the auth object still works with `testAuth`
-  (`authObjectId`) or by re-reading an authenticated read entrypoint
+- after the first registration of each kind — public, authenticated, mutating: register one,
+  check it, and only then register the rest of that kind; never register a batch before the first
+  check. Fix a systemic cause (auth object, Repeater, base URL, the content type the framework
+  expects) before continuing
+- after each destructive registration: call `testAuth` with the saved `authObjectId`. A `curl`
+  with your own token, or re-reading an entrypoint, does not test the auth object
 - after every `editEntrypoint`
 
 **Fixing.** A `401`/`403` or no response on an authenticated route goes back to `setup-auth`.
@@ -164,19 +167,21 @@ every one through Steps 3 and 4. Discovery results are discovery-scoped: `editEn
 or by finding the same method and URL with `listEntrypoints`. Delete duplicates and noise, and give
 the survivors Step 2 values.
 
-If the crawl came back thin, find out why before concluding the surface is small:
-`getDiscoveryWarnings` shows routes it could not reach or authenticate against, and
-`getDiscoveryLogs` the request-level trace. Usual causes are a missing or expired auth object,
-seeds that never link to the deeper routes, and a Repeater the target cannot be reached through.
+If the crawl came back thin, check `getDiscoveryWarnings` (routes it could not reach or
+authenticate against) and `getDiscoveryLogs` (the request trace) before concluding the surface is
+small. Usual causes: a missing or expired auth object, seeds that never link deeper, a Repeater
+the target cannot be reached through.
 
 ### Step 7: Final review
 
 Read this target's entrypoints with `listEntrypoints` (`projectId`,
-`host: ["<host[:port] of baseUrl>"]`, `limit: 100`, following `next`; the default page is 10).
-Then:
+`host: ["<host[:port] of baseUrl>"]`, `limit: 100`; the default page is 10), following `next` to
+the last page. This read-back is the only source for the Output. Then:
 
-1. Diff the Step 1 inventory — operations and JavaScript — against that list. Register anything
-   missing, or record it as a gap with a reason.
+1. Diff the Step 1 inventory — operations and JavaScript — against that list, one by one: each
+   item is covered by an entrypoint ID, excluded with its evidence, or missing. Register what is
+   missing, or record it as a gap with a reason. Write the diff out; it is the only source of the
+   Output's gaps.
 2. Call `getEntrypoint` for every entrypoint — `listEntrypoints` carries no parameters and no
    health — and build the final table: ID, method, URL, the parameters stored in `request`, and
    `response.status` with its content type.
@@ -186,16 +191,18 @@ Then:
 
 ### Output
 
-Build the Output only from the Step 7 results. Do not claim anything Bright's responses do not
-support — "all healthy" when some are not, parameters that are not in `request`, or "excluded X"
-while X is registered.
+Build the Output only from the Step 7 read-back — never from memory, running tallies, or
+estimates — and claim nothing Bright's responses do not support: "all healthy" when some are not,
+parameters that are not in `request`, or "excluded X" while X is registered.
 
 Return:
 
+- a counts line: `inventory N / registered M (healthy H, unhealthy U) / excluded E / gaps G`, with
+  M from the paginated `listEntrypoints`, H and U from the `getEntrypoint` reads, E and G from the
+  Step 7 diff. Any number reported elsewhere must match it
 - the final active set a scan reuses — every entrypoint left after Step 7, healthy or not:
   project entrypoint IDs with method, URL, the parameter values stored in `request`, and the
-  `response.status` Bright recorded. Also list the unhealthy ones separately with status and
-  reason
+  `response.status` Bright recorded, with each unhealthy one's reason
 - **scan-risk entrypoints**, each with its one-line reason
 - excluded operations with their handler evidence, and coverage gaps with the reason each route
   was missed or pruned
