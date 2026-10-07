@@ -5,8 +5,8 @@ description: Build the endpoint inventory from the source code and register its 
 
 ## Register Entrypoints
 
-Reuse the `projectId` resolved in `setup-repeater`, its Repeater, and the auth object from
-`setup-auth` instead of creating new ones; Step 5 says when each is attached. Bright sends the
+Reuse the `projectId` and Repeater from `setup-repeater` and the auth object from `setup-auth`
+instead of creating new ones; Step 5 says when each is attached. Bright sends the
 real request to the target on every `addEntrypoint` and `editEntrypoint`, so registration has
 side effects.
 
@@ -35,10 +35,10 @@ That list is the only input to Step 6.
 
 ### Step 2: Craft functional parameter values
 
-An entrypoint with empty or nonsensical values fails server-side validation, never reaches the
-handler, and gives a scan nothing worth mutating. Every path, query, body, and header value must
-be accepted by the application and seed mutation well. Build each request from a concrete URL on
-`baseUrl`, and derive every value from the code:
+An entrypoint with empty or nonsensical values fails validation, never reaches the handler, and
+gives a scan nothing to mutate. Every path, query, body, and header value must be accepted by the
+application and seed mutation well. Build each request from a concrete URL on `baseUrl`, and
+derive every value from the code:
 
 - **Enums and constants** — the exact member and casing (`OAUTH2`, not `oauth2`); a real key from
   an enumerated set, not `"test"`.
@@ -83,8 +83,8 @@ whether an existing entrypoint already covers the operation:
 - Different handlers, different method semantics on one path, or different resources stay
   distinct: `GET` and `POST` on a collection are two entrypoints, five filter variants of the
   `GET` are one.
-- When an existing entrypoint covers the operation, `editEntrypoint` it with the missing
-  parameters or better values instead of adding another.
+- If one already covers the operation, `editEntrypoint` it with the missing parameters or better
+  values instead of adding another.
 
 ### Step 4: Decide what to register
 
@@ -154,13 +154,13 @@ stop and record them as gaps.
 ### Step 6: Crawl only as a fallback
 
 Use `runDiscovery` with `crawlerUrls` only for the gaps Step 1 listed — a large surface is not a
-reason. State the justification in the Output. Pass `projectId`, a descriptive `name`,
-`crawlerUrls` seeded at the gap (not just the `baseUrl`), `repeaters` as a single-element array
-for private or local targets, and `authObjectId`. A user-supplied HAR, or a shipped or synthesized
-OpenAPI document uploaded with `uploadApiDefinition` and run through `runDiscovery` with the
-returned `fileId`, can fill a gap the same way.
+reason. Pass `projectId`, a descriptive `name`, `crawlerUrls` seeded at the gap (not just the
+`baseUrl`), `repeaters` as a single-element array for private or local targets, and
+`authObjectId`. A user-supplied HAR, or a shipped or synthesized OpenAPI document uploaded with
+`uploadApiDefinition` and run through `runDiscovery` with the returned `fileId`, can fill a gap
+the same way.
 
-Poll `getDiscoveryStatus` until the discovery completes, then read the results with
+Poll `getDiscoveryStatus` until it completes, then read the results with
 `listDiscoveryEntrypoints` (`limit: 100`, following `next`) and `getDiscoveryEntrypoint`, and put
 every one through Steps 3 and 4. Discovery results are discovery-scoped: `editEntrypoint` and
 `deleteEntrypoint` need the project entrypoint ID, taken from the entry's target entrypoint mapping
@@ -169,14 +169,14 @@ the survivors Step 2 values.
 
 If the crawl came back thin, check `getDiscoveryWarnings` (routes it could not reach or
 authenticate against) and `getDiscoveryLogs` (the request trace) before concluding the surface is
-small. Usual causes: a missing or expired auth object, seeds that never link deeper, a Repeater
-the target cannot be reached through.
+small. Usual causes: a missing or expired auth object, seeds that never link deeper, an
+unreachable Repeater.
 
 ### Step 7: Final review
 
 Read this target's entrypoints with `listEntrypoints` (`projectId`,
 `host: ["<host[:port] of baseUrl>"]`, `limit: 100`; the default page is 10), following `next` to
-the last page. This read-back is the only source for the Output. Then:
+the last page. Then:
 
 1. Diff the Step 1 inventory — operations and JavaScript — against that list, one by one: each
    item is covered by an entrypoint ID, excluded with its evidence, or missing. Register what is
@@ -189,17 +189,20 @@ the last page. This read-back is the only source for the Output. Then:
    every unhealthy entrypoint has been through Step 5 Fixing — fixed, kept as unhealthy, or
    deleted as a gap.
 
+If items 1–3 registered, edited, or deleted anything, repeat the paginated `listEntrypoints`, and
+`getEntrypoint` for the changed IDs, before the Output.
+
 ### Output
 
-Build the Output only from the Step 7 read-back — never from memory, running tallies, or
-estimates — and claim nothing Bright's responses do not support: "all healthy" when some are not,
+Build the Output only from the last Step 7 read-back — never from memory, tallies, or estimates
+— and claim nothing Bright's responses do not support: "all healthy" when some are not,
 parameters that are not in `request`, or "excluded X" while X is registered.
 
 Return:
 
 - a counts line: `inventory N / registered M (healthy H, unhealthy U) / excluded E / gaps G`, with
-  M from the paginated `listEntrypoints`, H and U from the `getEntrypoint` reads, E and G from the
-  Step 7 diff. Any number reported elsewhere must match it
+  M from the last paginated `listEntrypoints`, H and U from the latest `getEntrypoint` reads, E
+  and G from the Step 7 diff. Any number reported elsewhere must match it
 - the final active set a scan reuses — every entrypoint left after Step 7, healthy or not:
   project entrypoint IDs with method, URL, the parameter values stored in `request`, and the
   `response.status` Bright recorded; list the unhealthy ones separately with their reason

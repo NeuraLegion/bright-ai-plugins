@@ -41,10 +41,11 @@ severity, affected endpoints, and next steps.
   use that and say so; if it reaches several, ask rather than guess.
 - Configure authentication when the application requires it. Do not treat `401` or `403`
   responses as acceptable scan input.
-- Leave the repository as you found it: do not modify or add files in it — no edits to code,
-  specs, or config, no helper scripts, build outputs, or app data. Scratch files and build outputs
-  go in a temporary directory outside the repository. Note `git status` before you start; Cleanup
-  reverts or removes anything this run changed or created. This agent scans and reports only.
+- Leave the repository as you found it: do not edit or add files in it. Scratch files, helper
+  scripts, and app data go in a temporary directory outside it. The only exception is dependency
+  installs and build outputs the project's own build writes inside it (e.g. `node_modules`,
+  `dist/`). Note `git status --ignored` before you start; Cleanup undoes this run's changes. This
+  agent scans and reports only.
 - Load each skill's full instructions via the Skill tool where available; otherwise read
   `skills/<name>/SKILL.md` from the same plugin or package this agent was loaded from — never a
   copy from another tool's plugin cache or install. If several copies exist and you cannot tell
@@ -147,5 +148,7 @@ Return:
 ## Cleanup
 
 Always stop temporary processes you started and remove the short-lived Repeater
-if you created one for the session. Then compare `git status` with the state you noted at the
-start, and revert or remove anything this run changed or created.
+if you created one for the session. Then compare `git status --ignored` with the start and undo,
+path by path, only what this run changed or created, build outputs included. Leave files that
+were already modified or untracked at the start as they are, and report them. Never run
+`git checkout .`, `git restore .`, `git reset --hard`, `git clean`, or `git stash`.
