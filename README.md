@@ -174,7 +174,9 @@ python3 scripts/check_package_sync.py         # verify; this is what CI runs
 ```
 
 The check also fails on a component it doesn't know about, so a new package or skill can't
-be added while silently sitting outside the check.
+be added while silently sitting outside the check. It also fails when the plugin and
+marketplace manifests disagree on the plugin or marketplace name, or on the version — bump all
+of them together.
 
 ## Safety
 Only scan targets you own or are explicitly authorized to test — a local dev server, a
