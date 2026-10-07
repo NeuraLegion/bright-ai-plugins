@@ -106,10 +106,12 @@ retry until it is stable or you hit the retry ceiling.
 
 ### Phase 5: Register attack surface
 
-Use the `register-entrypoints` skill.
+Load the full instructions of the `register-entrypoints` skill before registering anything —
+through your tool's skill mechanism, or by reading its `SKILL.md`. Do not work from this summary.
 
-Prefer manually registered entrypoints when the retained endpoint set is small and well
-understood. Prefer discovery when the route surface is large or heavily generated.
+Register the retained endpoints from the code with functional parameter values, one entrypoint per
+operation, and crawl only for surface the code cannot show. Keep the `analyze-codebase`
+exclusions. Phase 6 scans the skill's final active set of entrypoint IDs.
 
 ### Phase 6: Run DAST
 
@@ -123,6 +125,7 @@ monitor them to completion, and retrieve findings.
 Return:
 - detected stack and startup command (or the supplied target URL)
 - authenticated vs unauthenticated target surface
+- scan-risk entrypoints reported by `register-entrypoints`, with their one-line reasons
 - Bright project and Repeater identifiers used
 - scan groups, test tags, and completion state
 - findings grouped by severity and endpoint

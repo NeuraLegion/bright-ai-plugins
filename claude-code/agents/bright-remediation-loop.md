@@ -59,7 +59,9 @@ a script, or an environment, follow that rather than a method inferred from the 
 3. **Establish the redeploy path — see below — before scanning anything.**
 4. Resolve the Bright project and configure the Repeater with `setup-repeater`.
 5. Configure authentication with `setup-auth` when needed.
-6. Register entrypoints with `register-entrypoints`.
+6. Register entrypoints with `register-entrypoints`. Load its full instructions rather than
+   working from this line, and keep the `analyze-codebase` exclusions. The baseline scan uses its
+   final active set of entrypoint IDs.
 
 ### Phase 1a: Can this loop actually close?
 
@@ -117,6 +119,7 @@ Run up to 5 rounds:
 Return:
 - how the target was reached and redeployed, and whether validation was possible at all
 - rounds completed
+- scan-risk entrypoints flagged at registration, with their reasons
 - fixes applied and files changed
 - findings that disappeared after validation
 - fixes that were written but never validated, if the user chose to continue without a

@@ -43,9 +43,10 @@ the code the surface comes from.
   one-line reason each. Examples of the scan-risk kind: global system settings whose fuzzed
   values could disable password login or signup; updating the auth user's own profile, where a
   fuzzed update mask could change username or password. Every exclusion must cite the handler
-  evidence. For this agent, `analyze-codebase` has its own unsafe-endpoint exclusions;
-  re-evaluate them under this rule — a `signout` that only clears a cookie does not revoke the
-  bearer token, and a `POST /user` is undoable through `DELETE /user/:id`.
+  evidence. This rule replaces the default exclusion criterion of `analyze-codebase` and
+  `register-entrypoints` for this agent: re-evaluate the `analyze-codebase` exclusions under it —
+  a `signout` that only clears a cookie does not revoke the bearer token, and a `POST /user` is
+  undoable through `DELETE /user/:id`.
 - Reach the target the way the user described. Their instruction outranks anything inferred
   from the repository. When they described nothing, work the startup out from the repository,
   bring the application up locally, and say what you chose — do not stop to ask.
@@ -62,7 +63,7 @@ the code the surface comes from.
 
 ### Phase 1: Analyze the codebase
 
-**Before doing anything in Phase 1, invoke the `analyze-codebase` skill (using the Skill tool) and read its full instructions. Do not work from the summary below. Skipping this skill is a failure.**
+**Before doing anything in Phase 1, load the full instructions of the `analyze-codebase` skill — through your tool's skill mechanism (such as a Skill tool), or by reading its `SKILL.md` — and follow them. Do not work from the summary below. Load every skill this agent uses the same way; skipping one is a failure.**
 
 Collect:
 - languages, frameworks, databases, and startup clues
@@ -103,14 +104,14 @@ target is reached directly.
 
 ### Phase 3: Configure the Repeater
 
-**Invoke the `setup-repeater` skill before proceeding. Do not work from the summary below.**
+**Load the full instructions of the `setup-repeater` skill before proceeding. Do not work from the summary below.**
 
 Resolve the Bright project, create or reuse a Repeater for private/local targets, start it, and
 verify connectivity.
 
 ### Phase 4: Resolve authentication
 
-**Invoke the `setup-auth` skill before proceeding. Do not work from the summary below.**
+**Load the full instructions of the `setup-auth` skill before proceeding. Do not work from the summary below.**
 
 Resolve a working auth object before discovery, so crawls and spec runs reach the
 authenticated surface.
@@ -122,16 +123,16 @@ authenticated surface.
 
 ### Phase 5: Discover and register
 
-**Invoke the `discover-and-register` skill before proceeding. Do not work from the summary below.**
+**Load the full instructions of the `register-entrypoints` skill before proceeding. Do not work from the summary below.**
 
-Build the inventory whitebox from the code, craft code-grounded parameter values, deduplicate
-semantically, register, verify health, and fall back to crawl only when justified.
+Complete the `analyze-codebase` inventory from the code, craft code-grounded parameter values,
+deduplicate by operation, register, verify health, and fall back to a crawl only when justified.
 
 ### Phase 6: Review and prune
 
-Use the `discover-and-register` skill, Step 6.
+Use the final review of the `register-entrypoints` skill.
 
-Diff the Step 1 inventory against `listEntrypoints` and register or record what is missing.
+Diff the inventory against `listEntrypoints` and register or record what is missing.
 Remove semantic duplicates and static noise (keep JavaScript), drop entrypoints that return
 `404`, send authenticated routes that return `401`/`403` back to auth setup (Phase 4), and keep
 the final active set. Finish with a `getEntrypoint` read of every entrypoint.
@@ -139,7 +140,8 @@ the final active set. Finish with a `getEntrypoint` read of every entrypoint.
 ## Output
 
 Return:
-- **skills loaded:** list every skill actually invoked via the Skill tool during this run
+- **skills loaded:** every skill whose full instructions you loaded during this run, and how
+  (skill tool or file read)
 - detected stack and startup command (or the supplied target URL)
 - the registered attack surface: entrypoint IDs with method, URL, the stored parameter values
   and the response status Bright recorded (from `getEntrypoint`), unhealthy ones listed
