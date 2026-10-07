@@ -202,7 +202,7 @@ Return:
   Step 7 diff. Any number reported elsewhere must match it
 - the final active set a scan reuses — every entrypoint left after Step 7, healthy or not:
   project entrypoint IDs with method, URL, the parameter values stored in `request`, and the
-  `response.status` Bright recorded, with each unhealthy one's reason
+  `response.status` Bright recorded; list the unhealthy ones separately with their reason
 - **scan-risk entrypoints**, each with its one-line reason
 - excluded operations with their handler evidence, and coverage gaps with the reason each route
   was missed or pruned
