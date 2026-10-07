@@ -49,7 +49,14 @@ severity, affected endpoints, and next steps.
   use that and say so; if it reaches several, ask rather than guess.
 - Configure authentication when the application requires it. Do not treat `401` or `403`
   responses as acceptable scan input.
-- Do not modify application code. This agent scans and reports only.
+- Leave the repository as you found it: do not modify or add files in it — no edits to code,
+  specs, or config, no helper scripts, build outputs, or app data. Scratch files and build outputs
+  go in a temporary directory outside the repository. Note `git status` before you start; Cleanup
+  reverts or removes anything this run changed or created. This agent scans and reports only.
+- Load each skill's full instructions via the Skill tool where available; otherwise read
+  `skills/<name>/SKILL.md` from the same plugin or package this agent was loaded from — never a
+  copy from another tool's plugin cache or install. If several copies exist and you cannot tell
+  which is this package's, say so and name the path you used.
 
 ## Workflow
 
@@ -90,6 +97,12 @@ to test on staging scans the wrong thing.
    Stop and ask only when the repository offers no way to start the application, or when it
    holds several deployable services and which one is under test is genuinely ambiguous.
 
+   If the repository contains a frontend the application serves, bring the app up with the
+   built frontend included — through the startup that builds it, such as the production
+   `Dockerfile` or the frontend build step — not a backend-only build, and do not drop build
+   stages to save time. If you cannot, carry on and record JavaScript as a coverage gap with the
+   reason.
+
 Record `baseUrl` and how the target is run; later phases need both. A private or local target is
 scanned through a Repeater running on this machine, so it has to answer from here; a public
 target is reached directly.
@@ -113,8 +126,8 @@ retry until it is stable or you hit the retry ceiling.
 
 ### Phase 5: Register attack surface
 
-Load the full instructions of the `register-entrypoints` skill before registering anything —
-through your tool's skill mechanism, or by reading its `SKILL.md`. Do not work from this summary.
+Load the full instructions of the `register-entrypoints` skill before registering anything, as
+the skill-loading constraint describes. Do not work from this summary.
 
 Register the retained endpoints from the code with functional parameter values, one entrypoint per
 operation, and crawl only for surface the code cannot show. Keep the `analyze-codebase`
@@ -136,9 +149,11 @@ Return:
 - Bright project and Repeater identifiers used
 - scan groups, test tags, and completion state
 - findings grouped by severity and endpoint
+- the `register-entrypoints` counts line, with its gaps named
 - blockers that prevented deeper coverage, if any
 
 ## Cleanup
 
 Always stop temporary processes you started and remove the short-lived Repeater
-if you created one for the session.
+if you created one for the session. Then compare `git status` with the state you noted at the
+start, and revert or remove anything this run changed or created.

@@ -36,6 +36,13 @@ and equivalent test set that originally exposed the issue.
   entrypoints, and every scan round. Use the one the user named; if the token reaches exactly
   one project, use that and say so; if it reaches several, ask rather than guess.
 - Keep edits minimal and limited to the code that causes the finding.
+- Change only the files a fix needs. Scratch files, helper scripts, build outputs, and app data go
+  in a temporary directory outside the repository. Note `git status` before you start; Cleanup
+  reverts or removes anything this run changed or created other than the fixes you report.
+- Load each skill's full instructions via the Skill tool where available; otherwise read
+  `skills/<name>/SKILL.md` from the same plugin or package this agent was loaded from — never a
+  copy from another tool's plugin cache or install. If several copies exist and you cannot tell
+  which is this package's, say so and name the path you used.
 - Do not leave placeholder remediation code or vague TODO scaffolding in the repository.
 - If a finding cannot be safely auto-remediated, stop and explain the blocker instead of guessing.
 - Re-run the same entrypoints and the same relevant Bright tests after each fix round unless a failure forces a narrow corrective adjustment.
@@ -54,7 +61,9 @@ a script, or an environment, follow that rather than a method inferred from the 
    nothing, bring the application up locally from what the repository provides — compose file,
    `Dockerfile`, `Makefile` target, package script, framework command, in that order — and say
    which one you picked. A target you started yourself is also the case where this loop closes
-   most easily, since you can restart it.
+   most easily, since you can restart it. If the repository contains a frontend the application
+   serves, include its build rather than a backend-only start; if you cannot, record JavaScript
+   as a coverage gap.
 3. **Establish the redeploy path — see below — before scanning anything.**
 4. Resolve the Bright project and configure the Repeater with `setup-repeater`.
 5. Configure authentication with `setup-auth` when needed.
@@ -119,6 +128,7 @@ Return:
 - how the target was reached and redeployed, and whether validation was possible at all
 - rounds completed
 - scan-risk entrypoints flagged at registration, with their reasons
+- the `register-entrypoints` counts line, with its gaps named
 - fixes applied and files changed
 - findings that disappeared after validation
 - fixes that were written but never validated, if the user chose to continue without a
@@ -149,3 +159,5 @@ Use framework-native remediations when possible:
 ## Cleanup
 
 Always stop temporary processes you started and remove any Repeater created for the session.
+Then compare `git status` with the state you noted at the start: keep only the fix edits listed in
+the summary, and revert or remove anything else this run created.
