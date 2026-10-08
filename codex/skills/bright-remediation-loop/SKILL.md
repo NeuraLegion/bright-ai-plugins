@@ -107,7 +107,6 @@ Use the `run-scan` skill.
 Record for each scan group:
 - entrypoint IDs
 - test tags
-- attack locations
 - the `authObjectId` its entrypoints carry, or none
 
 These values become the validation baseline. Reuse them during follow-up scans.

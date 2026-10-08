@@ -44,8 +44,7 @@ exactly to prove a fix worked, so this is the baseline the remediation loop reus
 restatement of the tool schema:
 - `entrypointIds`
 - `tests`
-- attack locations (body, query, path, or headers)
-- `authObjectId` — the one its entrypoints carry, or none
+- `authObjectId` — the one its entrypoints carry, or none (for `testAuth`, not for `runScan`)
 - `repeaters`
 
 ### Step 3: Launch scans
@@ -55,8 +54,9 @@ group: restore what that auth object depends on (the app, its seeded user or cre
 Repeater) and run `testAuth` on the same object again. If it still fails, report the group as
 not scanned with the `testAuth` result; do not swap in another auth object, because the
 group's entrypoints carry this one. Then call `runScan` once per group, in the project resolved
-in `setup-repeater`, using that group's recorded configuration; omit `authObjectId` for a group
-without one.
+in `setup-repeater`, with the group's `entrypointIds`, `tests`, and `repeaters`. Never pass
+`authObjectId` to `runScan` with `entrypointIds`: Bright rejects that scan, and each entrypoint
+already carries its own.
 
 ### Step 4: Monitor to completion
 

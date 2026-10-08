@@ -72,9 +72,9 @@ Do not leave placeholder code, fake guards, or broad speculative refactors.
 Use the same:
 - `entrypointIds`
 - `tests`
-- attack locations (body, query, path, or headers)
-- `authObjectId`
 - `repeaters`
+- the auth objects the entrypoints carry, verified with `testAuth` before the scan (launch as
+  `run-scan` Step 3 says)
 
 Only narrow or adjust this baseline when the previous scan configuration is now invalid for
 an explicit, documented reason.
