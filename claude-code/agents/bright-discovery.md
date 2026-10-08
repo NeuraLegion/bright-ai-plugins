@@ -51,6 +51,9 @@ reads the code the surface comes from.
   project, use that and say so; if it reaches several, ask rather than guess.
 - Map every authentication mechanism the code enforces and cover each one the inventory needs,
   so discovery reaches every authenticated route group instead of bouncing off a login wall.
+- No time, cost, or count budget applies unless the user sets one: never narrow the inventory to
+  save effort. If an external limit stops the run, name exactly which operations were not
+  processed and why.
 - Do NOT run scans — this agent discovers and registers only, never `runScan`.
 - Leave the repository as you found it: do not edit or add files in it. Scratch files, helper
   scripts, and app data go in a temporary directory outside it. The only exception is dependency

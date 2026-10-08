@@ -8,12 +8,13 @@ description: Build the endpoint inventory from the source code and register its 
 Reuse the `projectId` and Repeater from `setup-repeater` and the auth map from `setup-auth`
 instead of creating new ones; Step 5 says when each is attached. Bright sends the
 real request to the target on every `addEntrypoint` and `editEntrypoint`, so registration has
-side effects.
+side effects. Without a user-set time, cost, or count budget, never narrow the inventory to save
+effort; if an external limit stops the run, name every unprocessed operation and why.
 
 ### Step 1: Complete the inventory from the code
 
-Start from the `analyze-codebase` inventory and its exclusions instead of redoing them. Complete and
-verify it from the code, recording for every operation:
+Start from the `analyze-codebase` inventory and its exclusions; do not redo them. Complete and
+verify it from the code, recording per operation:
 
 - the full path, including prefixes, versioning, and sub-routers mounted in middleware, and its
   auth-map group (an unmapped route goes back to `setup-auth`)
@@ -24,20 +25,19 @@ verify it from the code, recording for every operation:
   copied from a neighbouring route
 - the handler identity (file plus function, or RPC name), which Step 3 relies on
 - if the app serves a built frontend: the JavaScript the served `index.html` references (`curl`
-  the `baseUrl`), the service worker it registers, and the chunks those bundles load, or the build
-  output directory (e.g. `dist/`). If the repository has frontend
-  source but the served `index.html` references no bundle, record JavaScript as a coverage gap:
-  the frontend was not built or not served
+  the `baseUrl`), its service worker, and the chunks they load, or the build output directory
+  (e.g. `dist/`). Frontend source with no bundle in the served `index.html` is a JavaScript
+  coverage gap: the frontend was not built or served
 
 Also list the surface the code cannot reveal — routes built at runtime, plugin route tables,
-server-rendered pages that are not statically visible, parts with no source in the repository.
+server-rendered pages not statically visible, parts with no source in the repository.
 That list is the only input to Step 6.
 
 ### Step 2: Craft functional parameter values
 
-Empty or nonsensical values fail validation and give a scan nothing to mutate. Every path, query,
-body, and header value must be accepted by the application and seed mutation well. Build each request from a concrete URL on `baseUrl`, and
-derive every value from the code:
+Every path, query, body, and header value must pass validation and seed mutation well; empty or
+nonsensical values give a scan nothing. Build each request from a concrete URL on `baseUrl`,
+deriving every value from the code:
 
 - **Enums and constants** — the exact member and casing (`OAUTH2`, not `oauth2`); a real key from
   an enumerated set, not `"test"`.
@@ -47,13 +47,12 @@ derive every value from the code:
   fields being set.
 - **Types and validation** — the declared type, format hints (email, UUID, date-time, URI),
   patterns, length bounds, every required DTO field, nested object and array shapes.
-- **Seeds and specs** — IDs, slugs, and foreign keys that exist in the seeded data; `example`
-  values a shipped spec provides.
-- **Dependent objects** — read real IDs from the running app. When a route needs an object that
-  does not exist yet, create it first through the application's API with `curl` against `baseUrl`
-  and the run's credentials, and create separate sacrificial objects for every destructive
-  operation. If you cannot create one, record the route as a gap instead of registering a
-  guaranteed 404.
+- **Seeds and specs** — IDs, slugs, and foreign keys from the seeded data; `example`
+  values a shipped spec provides only where the code accepts them.
+- **Dependent objects** — read real IDs from the running app. Create a missing object first
+  through the application's API (`curl` against `baseUrl` with the run's credentials), and a
+  separate sacrificial object for every destructive operation. If you cannot, record the route
+  as a gap instead of registering a guaranteed 404.
 
 Then:
 
@@ -71,39 +70,38 @@ Then:
 Deduplication is your judgement about operations, not a method-plus-path rule. Before each
 `addEntrypoint`, call `listEntrypoints` with the `projectId` and
 `host: ["<host[:port] of baseUrl>"]`, narrowed by `q` (a path fragment) and `method`, and decide
-whether an existing entrypoint already covers the operation:
+whether one already covers the operation:
 
 - One handler, RPC, or operation is one entrypoint, whatever its parameter combinations, carrying
   the union of the parameters worth mutating.
 - Two transports of one handler — a gRPC-gateway RPC path and its REST mapping — are one
-  operation. Keep the one that exposes more mutable input (usually REST); register the other only
-  if it reaches input the first cannot. A `q` + `method` lookup misses these pairs: match them by
-  handler identity and search by the resource fragment without `method`.
+  operation. Keep the one exposing more mutable input (usually REST); add the other only if it
+  reaches input the first cannot. A `q` + `method` lookup misses these pairs: match by handler
+  identity and search the resource fragment without `method`.
 - Different handlers, different method semantics on one path, or different resources stay
   distinct: `GET` and `POST` on a collection are two entrypoints, five filter variants of the
   `GET` are one.
-- If one already covers the operation, `editEntrypoint` it with the missing parameters or better
-  values instead of adding another.
+- If one covers the operation, `editEntrypoint` it with the missing parameters or better values
+  instead of adding another.
 
 ### Step 4: Decide what to register
 
 **Static noise.** Do not register CSS, images (png, jpg, gif, svg, webp, ico), fonts (woff, woff2,
 ttf, otf, eot), source maps, `manifest.json` or `*.webmanifest`, `robots.txt`, `sitemap.xml`, or
 other non-executable static files. Keep JavaScript — application bundles, chunks, locale bundles,
-service workers — because it can carry vulnerabilities worth scanning.
+service workers — as it can carry vulnerabilities.
 
 **Exclusions.** If the calling agent states that its own exclusion rule replaces this default,
 apply it. Otherwise keep every exclusion `analyze-codebase` made, do not re-judge the operations it
 retained, and judge each operation you add with its Step 4 criterion. Under any rule, even for an
-operation `analyze-codebase` retained, exclude an operation that revokes the current session or
+operation `analyze-codebase` retained, exclude one that revokes the current session or
 bearer token server-side (not one that only clears a cookie), deletes the auth user, exists to
 change their password or other credentials, or shuts the application down. Cite the handler for
 every exclusion.
 
 **Scan-risk.** An operation the active rule retains may still be turned against the run by a
-fuzzed request — global settings whose fuzzed values could disable login or signup, or an update
-of the auth user's own profile where a fuzzed field mask could change the username, password, or
-role. Register it and list it under **Scan-risk entrypoints** in the Output with a one-line reason
+fuzzed request — global settings that could disable login or signup, or an update of the auth
+user's own profile that could change the username, password, or role. Register it and list it under **Scan-risk entrypoints** in the Output with a one-line reason
 citing the handler.
 
 ### Step 5: Register and verify
@@ -111,7 +109,17 @@ citing the handler.
 Register reads and creates first, then updates, and destructive operations (delete, deactivate,
 reset, purge, vacuum, revoke…) last, each against a sacrificial object from Step 2. Never target
 the user, session, or credential an auth object depends on, or objects other entrypoints
-reference — deleting the only user breaks its auth object and every later registration.
+reference — deleting the only user breaks its auth object and later registrations.
+
+**Shipped spec first.** If the repository ships a machine-readable API definition
+(OpenAPI/Swagger, or a template that renders one), register the surface it describes from it;
+the code inventory stays the source of truth. Render or copy it to the run's temp directory and
+diff its operations with the Step 1 inventory both ways: drop from the copy what the code
+does not define, what Step 4 excludes, and destructive operations (registered by hand, last);
+register by hand every inventory operation it lacks. `uploadApiDefinition` the copy (base64
+`content` + `filename`, or `url` if the app serves it unchanged), then `runDiscovery` with the
+`fileId`, the Repeater, and the `authObjectId` guarding that surface. Handle the results as
+Step 6 says; spec examples alone are not evidence.
 
 Register each operation with `addEntrypoint`: `projectId`; `request` with `method`, `url`,
 `headers` as an object of name→string array (including the content type), and `body`;
@@ -123,7 +131,7 @@ returns only `entrypointId`, not health.
 
 **Health.** Call `getEntrypoint` (`projectId`, `entrypointId`) and read `response.status`,
 `response.headers["content-type"]`, and `response.body`. Healthy is the handler's success path as
-the code defines it, whichever apply: status, content type, redirect target, and effect (a
+the code defines it, whichever apply: status, content type, redirect target, effect (a
 change you can read back). A redirect, empty list, or bare 2xx alone is not proof: create what
 it should show (Step 2) and check again, or count it unhealthy. Unhealthy is no `response`
 object (Bright got no answer — check `testAuth`, the target, and the Repeater first), any 4xx or
@@ -135,11 +143,11 @@ if the tool also returns `connectivity`, anything other than `ok` is unhealthy.
 sent and quotes its response. Never register an unevidenced value (an invented ID, another
 mechanism's credentials) as real: obtain it or record a gap.
 
-Check health at these points, and leave the rest to Step 7:
+Check health at these points; Step 7 reconciles the rest:
 
-- after the first registration of each kind — public, per mechanism, mutating: register one,
-  check it, and only then register the rest of that kind. Fix a systemic cause (auth object,
-  Repeater, base URL, the content type the framework expects) before continuing
+- after the first registration of each kind — public, per mechanism, mutating: check one before
+  registering the rest of that kind, and fix a systemic cause (auth object, Repeater, base URL,
+  the content type the framework expects) first
 - after each destructive registration: call `testAuth` with each saved `authObjectId`. A `curl`
   with your own token, or re-reading an entrypoint, does not test an auth object
 - after every `editEntrypoint`
@@ -147,16 +155,15 @@ Check health at these points, and leave the rest to Step 7:
 **Fixing.** The auth map's rejection or no response on an authenticated route goes back to
 `setup-auth`; if its mechanism ends as a gap, delete those entrypoints.
 Otherwise read the error in `response.body`, fix the values or path with `editEntrypoint`, and
-check again — at most 3 attempts. Then, if the handler answered, keep the entrypoint and
-record it as unhealthy with its status and message. If the request never reached the handler (404,
-SPA shell, no response), remove it with `deleteEntrypoint` and record it as a gap.
+check again — at most 3 attempts. Then keep an entrypoint whose handler answered as unhealthy
+with its status and message; delete one whose request never reached the handler (404, SPA shell,
+no response) with `deleteEntrypoint` and record a gap.
 
 **Unreachable target.** If `addEntrypoint` or `editEntrypoint` fails with "Cannot access the
-target" or a similar error, stop registering and keep a list of the failed requests. Recover in at
-most 3 attempts; an attempt is one restart of the Repeater (`setup-repeater` Step 3) or of the app,
-followed by one `curl` of `baseUrl` and one `listRepeaters` check that its `status` is
-`connected`. Once both succeed, retry exactly the failed registrations. After 3 failed attempts,
-stop and record them as gaps.
+target" or similar, stop registering and list the failed requests. Recover in at most 3
+attempts, each one restart of the Repeater (`setup-repeater` Step 3) or the app, then one `curl`
+of `baseUrl` and one `listRepeaters` check for `status` `connected`. Once both succeed, retry
+exactly the failed registrations; after 3 failed attempts, record them as gaps.
 
 ### Step 6: Crawl only as a fallback
 
@@ -164,60 +171,62 @@ Use `runDiscovery` with `crawlerUrls` only for the gaps Step 1 listed — a larg
 reason. Pass `projectId`, a descriptive `name`, `crawlerUrls` seeded at the gap (not just the
 `baseUrl`), `repeaters` as a single-element array for private or local targets, and the
 `authObjectId` of the mechanism guarding the seeded area (none if public), one crawl per auth
-object. A user-supplied HAR, or a shipped or synthesized OpenAPI document uploaded with
-`uploadApiDefinition` and run through `runDiscovery` with the returned `fileId`, can fill a gap
-the same way.
+object. A user-supplied HAR or a synthesized OpenAPI document (`uploadApiDefinition`, then
+`runDiscovery` with its `fileId`) can fill a gap the same way.
 
-Poll `getDiscoveryStatus` until it completes, then read the results with
-`listDiscoveryEntrypoints` (`limit: 100`, following `next`) and `getDiscoveryEntrypoint`, and put
-every one through Steps 3 and 4. Discovery results are discovery-scoped: `editEntrypoint` and
-`deleteEntrypoint` need the project entrypoint ID, taken from the entry's target entrypoint mapping
-or by finding the same method and URL with `listEntrypoints`. Delete duplicates and noise, and give
-the survivors Step 2 values.
+For every discovery, crawl or spec, poll `getDiscoveryStatus` until it completes, then read the
+results with `listDiscoveryEntrypoints` (`limit: 100`, following `next`) and
+`getDiscoveryEntrypoint`. Results are discovery-scoped: `editEntrypoint` and `deleteEntrypoint`
+need the project entrypoint ID, from the entry's target entrypoint mapping or the same method and
+URL in `listEntrypoints`. Put every result through Steps 3–4 (delete duplicates and noise), then
+give the survivors Step 2 values, their route group's `authObjectId`, and Step 5 health checks.
 
-If the crawl came back thin, check `getDiscoveryWarnings` (unreachable or unauthenticated
-routes) and `getDiscoveryLogs` (the request trace) before concluding the surface is
-small. Usual causes: a missing or expired auth object, seeds that never link deeper, an
-unreachable Repeater.
+If a discovery came back thin, check `getDiscoveryWarnings` (unreachable or unauthenticated
+routes) and `getDiscoveryLogs` (the request trace) before concluding the surface is small —
+usually a missing or expired auth object, seeds that never link deeper, or an unreachable
+Repeater.
 
 ### Step 7: Final review
 
 Read this target's entrypoints with `listEntrypoints` (`projectId`,
 `host: ["<host[:port] of baseUrl>"]`, `limit: 100`), following `next` to
-the last page. Then:
+the end. Then:
 
 1. Diff the Step 1 inventory — operations and JavaScript — against that list, one by one: each
    item is covered by an entrypoint ID, excluded with its evidence, or missing. Register what is
-   missing, or record it as a gap with its evidence. Write the diff out; it is the only source of
-   the Output's gaps.
-2. Call `getEntrypoint` for every entrypoint (`listEntrypoints` has no parameters or health)
-   and build the final table: ID, method, URL, `authObjectId`, the parameters stored in
-   `request`, and `response.status` with its content type.
+   missing or record it as a gap with its evidence, and write the diff out: it is the Output's
+   only source of gaps.
+2. Reconcile health: `getEntrypoint` every listed entrypoint not read since its last edit
+   (`listEntrypoints` has no parameters or health), and build the final table from the reads:
+   ID, method, URL, `authObjectId`, the parameters in `request`, `response.status` and content
+   type. Only a response on the handler's success path (Step 5) is healthy; no response,
+   `unauthorized`, a 4xx or 5xx, or an empty 2xx where seeded data should match is unhealthy.
 3. Confirm no two entrypoints cover one operation, no static noise remains (JavaScript kept), and
-   every unhealthy entrypoint has been through Step 5 Fixing — fixed, kept as unhealthy, or
-   deleted as a gap.
+   every unhealthy entrypoint has been through Step 5 Fixing — fixed, kept as unhealthy with its
+   response quoted, or deleted as a gap.
 
-If items 1–3 registered, edited, or deleted anything, repeat the paginated `listEntrypoints`, and
-`getEntrypoint` for the changed IDs, before the Output.
+If items 1–3 changed anything, repeat the paginated `listEntrypoints` and item 2 before the
+Output; an entrypoint not read since its last edit is never healthy.
 
 ### Output
 
-Build the Output only from the last Step 7 read-back — never from memory, tallies, or estimates
-— and claim nothing Bright's responses do not support: "all healthy" when some are not,
-parameters not in `request`, or "excluded X" while X is registered.
+Build the Output only from the last Step 7 reconciliation — never from memory, tallies, or
+estimates — and claim nothing Bright's responses do not support (parameters not in `request`,
+"excluded X" while X is registered). Never call the set validated, healthy, or complete while any
+entrypoint is unhealthy, unread, or has no response.
 
 Return:
 
-- a counts line: `inventory N / registered M (healthy H, unhealthy U) / excluded E / gaps G`, with
-  M from the last paginated `listEntrypoints`, H and U from the latest `getEntrypoint` reads, E
-  and G from the Step 7 diff. Any number reported elsewhere must match it
+- a counts line `inventory N / registered M (healthy H, unhealthy U) / excluded E / gaps G` in
+  exact numbers, never `~`: M from the last paginated `listEntrypoints`, H + U = M from the
+  reconciliation, E and G from the Step 7 diff. Other reported numbers must match it
 - the final active set a scan reuses — every entrypoint left after Step 7, healthy or not:
-  project entrypoint IDs with method, URL, `authObjectId`, the parameter values stored in
-  `request`, and the `response.status` Bright recorded; list the unhealthy ones separately with
-  their reason
+  project entrypoint ID, method, URL, `authObjectId`, the values stored in `request`, and
+  Bright's recorded `response.status`. A large set may go to a file in the run's temp directory,
+  path printed; always list the unhealthy ones separately inline with their quoted response
 - **scan-risk entrypoints**, each with its one-line reason
-- excluded operations with their handler evidence, and coverage gaps with the evidence for each
-  missed or pruned route
+- excluded operations with handler evidence, and coverage gaps with evidence for each missed or
+  pruned route
 - duplicates merged and noise excluded, with counts
 - the discovery path — whitebox, plus any crawl or spec upload with its `discoveryId` and
   justification
