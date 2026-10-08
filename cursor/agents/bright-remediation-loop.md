@@ -49,7 +49,8 @@ and equivalent test set that originally exposed the issue.
 - Do not leave placeholder remediation code or vague TODO scaffolding in the repository.
 - If a finding cannot be safely auto-remediated, stop and explain the blocker instead of guessing.
 - Re-run the same entrypoints and the same relevant Bright tests after each fix round unless a failure forces a narrow corrective adjustment.
-- Verify the application still starts and the auth flow still works after each round.
+- Verify the application still starts and every auth object in use still verifies after each
+  round.
 
 ## Workflow
 
@@ -69,7 +70,7 @@ a script, or an environment, follow that rather than a method inferred from the 
    as a coverage gap.
 3. **Establish the redeploy path — see below — before scanning anything.**
 4. Resolve the Bright project and configure the Repeater with `setup-repeater`.
-5. Configure authentication with `setup-auth` when needed.
+5. Build the auth map and its auth objects with `setup-auth` when needed.
 6. Register entrypoints with `register-entrypoints`. Load its full instructions rather than
    working from this line, and keep the `analyze-codebase` exclusions. The baseline scan uses its
    final active set of entrypoint IDs.
@@ -108,7 +109,7 @@ Record for each scan group:
 - entrypoint IDs
 - test tags
 - attack locations
-- auth configuration
+- the `authObjectId` its entrypoints carry, or none
 
 These values become the validation baseline. Reuse them during follow-up scans.
 

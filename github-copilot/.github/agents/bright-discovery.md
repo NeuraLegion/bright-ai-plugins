@@ -56,8 +56,8 @@ reads the code the surface comes from.
 - Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
   discovery, and entrypoints. Use the one the user named; if the token reaches exactly one
   project, use that and say so; if it reaches several, ask rather than guess.
-- Configure authentication when the application requires it, so discovery reaches
-  authenticated routes instead of bouncing off the login wall.
+- Map every authentication mechanism the code enforces and cover each one the inventory needs,
+  so discovery reaches every authenticated route group instead of bouncing off a login wall.
 - Do NOT run scans — this agent discovers and registers only, never `runScan`.
 - Leave the repository as you found it: do not edit or add files in it. Scratch files, helper
   scripts, and app data go in a temporary directory outside it. The only exception is dependency
@@ -126,13 +126,15 @@ verify connectivity.
 
 **Load the full instructions of the `setup-auth` skill before proceeding. Do not work from the summary below.**
 
-Resolve a working auth object before discovery, so crawls and spec runs reach the
-authenticated surface.
+Resolve the auth map and its auth objects before discovery, so registrations, crawls, and spec
+runs reach every authenticated route group.
 
-1. **A caller supplied an `authObjectId`.** Fetch it with `getAuth`, confirm it with `testAuth`,
-   and reuse it. Only fall through to detection if it does not verify.
-2. **Otherwise** use the skill to detect whether auth is required and create a verified auth
-   object when it is.
+1. **A caller supplied an `authObjectId`.** Build the auth map with the skill, fetch the object
+   with `getAuth`, and reuse it for its mechanism if it passes the skill's Step 2 check. If it
+   fails the check, say so, do not edit it, and map its mechanism like the rest.
+2. **Otherwise** use the skill to build the auth map from the code and a verified auth object
+   for each mechanism the inventory needs. A mechanism that cannot be covered becomes a gap
+   with the request sent and the response quoted.
 
 ### Phase 5: Discover and register
 
@@ -146,7 +148,8 @@ deduplicate by operation, register, verify health, and fall back to a crawl only
 Run Step 7 of `register-entrypoints` in full: the paginated `listEntrypoints` read-back, the
 explicit inventory diff, and a `getEntrypoint` read of every entrypoint. Prune as the skill says
 — semantic duplicates, static noise (keep JavaScript), entrypoints that never reach their handler
-— and send authenticated routes that return `401`/`403` back to Phase 4, then run Step 7 again.
+— and send authenticated routes that return their mechanism's rejection back to Phase 4, then
+run Step 7 again.
 Every number and list in the Output comes from the last read-back.
 
 ## Output
@@ -163,16 +166,19 @@ Return:
   a one-line reason each citing handler evidence
 - the discovery path — whitebox, plus any fallback crawl with its justification
 - duplicates merged and noise excluded
-- the auth object reused or created
+- **the auth map:** the public route groups, and each mechanism with its route groups, the
+  guard's file and line, and either its auth object ID (supplied, reused, or created) or a
+  request-carried credential, with the unauthenticated response it was checked against, or
+  its gap with the request sent and the response quoted
 - the Repeater outcome: kept (with its ID), or reused
-- coverage gaps by name, from the Step 7 diff, and why each was missed or pruned
+- coverage gaps by name, from the Step 7 diff, with the evidence for each
 - the repository check from Cleanup: clean, or what was undone and what was left as found
 - note explicitly that no scan was run — this agent discovers only
 
 ## Cleanup
 
 Always stop the temporary processes you started (the Repeater CLI, the application). **Do NOT
-delete the Repeater record in Bright** — the auth object and entrypoints reference it, and a scan
+delete the Repeater record in Bright** — the auth objects and entrypoints reference it, and a scan
 usually follows discovery. Never delete a reused Repeater; say in the Output which Repeater was
 kept. Then compare `git status --ignored` with the start and undo, path by path, only what this
 run changed or created, build outputs included. Leave files that were already modified or untracked at the start as they are, and

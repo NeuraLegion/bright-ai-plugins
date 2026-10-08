@@ -47,8 +47,8 @@ severity, affected endpoints, and next steps.
 - Resolve the Bright project before creating anything, and reuse it for the Repeater, auth,
   entrypoints, and scans. Use the one the user named; if the token reaches exactly one project,
   use that and say so; if it reaches several, ask rather than guess.
-- Configure authentication when the application requires it. Do not treat `401` or `403`
-  responses as acceptable scan input.
+- Configure authentication for every mechanism the inventory needs. Do not treat a response
+  the auth map records as a rejection (often `401` or `403`) as acceptable scan input.
 - Leave the repository as you found it: do not edit or add files in it. Scratch files, helper
   scripts, and app data go in a temporary directory outside it. The only exception is dependency
   installs and build outputs the project's own build writes inside it (e.g. `node_modules`,
@@ -122,8 +122,9 @@ Use the `setup-repeater` skill.
 
 Use the `setup-auth` skill.
 
-If the app requires authentication, build a real auth object that works against the target and
-retry until it is stable or you hit the retry ceiling.
+If the app requires authentication, build the auth map and a real auth object for each
+mechanism the inventory needs, verified against a route that mechanism guards, retrying until
+each is stable or you hit the retry ceiling.
 
 ### Phase 5: Register attack surface
 
@@ -138,14 +139,17 @@ exclusions. Phase 6 scans the skill's final active set of entrypoint IDs.
 
 Use the `run-scan` skill.
 
-Select the smallest relevant Bright test set per endpoint group, launch scans,
-monitor them to completion, and retrieve findings.
+Select the smallest relevant Bright test set per endpoint group, launch one scan per test set
+and auth object, monitor them to completion, and retrieve findings.
 
 ## Output
 
 Return:
 - detected stack and startup command (or the supplied target URL)
-- authenticated vs unauthenticated target surface
+- the auth map: the public route groups, and each mechanism with its route groups, the
+  guard's file and line, and either its auth object ID or a request-carried credential,
+  with the unauthenticated response it was checked against, or its gap with the response
+  quoted
 - scan-risk entrypoints reported by `register-entrypoints`, with their one-line reasons
 - Bright project and Repeater identifiers used
 - scan groups, test tags, and completion state
