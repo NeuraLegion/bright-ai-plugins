@@ -25,6 +25,9 @@ each file entry once, in file order, through one session: one login per file. Ea
   entry first. An entry whose replay answers `404` is dropped without a trace: a missing route
   or object is a gap, not an entry. A destructive entry targets a sacrificial object created
   and read back before the discovery, never an ID an earlier entry would create.
+- **No invented IDs.** Never use the ID of an object that does not exist in the app, and never
+  edit the app's database or fixtures to make an entry pass: use objects created through the
+  running app or read from it.
 - **Order** as R5 orders registrations; file order is replay order.
 - **At most 90 entries per file**, under Bright's discovery entrypoint limit; split
   larger groups.
@@ -73,15 +76,29 @@ this:
 
 ### Step 4: Upload and discover
 
-1. Base64 the file; `uploadApiDefinition` with `projectId`, `content`, and a `filename` ending in
-   `.har`. If rejected, check the file parses and retry once; if it fails again or for size,
-   split it; a single failing entry goes through `addEntrypoint`.
+1. Upload the file with the Bright CLI, giving each file a unique name (an upload under an
+   existing name replaces that file's content):
+
+   ```bash
+   FILE_ID=$(npx @brightsec/cli archive:upload --type har --discard false --project <projectId> \
+     --token "$BRIGHT_TOKEN" --hostname "$BRIGHT_HOSTNAME" <file.har> | tail -n1 | tr -d '[:space:]')
+   ```
+
+   `FILE_ID` is the `fileId`; empty means the upload failed. The CLI validates the HAR before
+   sending it: on an error, stderr names the violation; fix the file and upload again. Never
+   pass HAR content in tool arguments, and never echo the token.
 2. `runDiscovery` with `projectId`, a `name` for the group and part, the `fileId`, `repeaters`
    for private or local targets, and the group's `authObjectId` (none for public or
    request-carried files). Never `crawlerUrls`: Bright would ignore the file.
 3. Poll `getDiscoveryStatus` until complete; in `getDiscoveryWarnings`,
    `ENTRYPOINTS_LIMIT_REACHED` means the run stopped early. A failed discovery or a Repeater
    or target error gets R5's unreachable-target recovery.
+4. Before the next file, check health: `curl` `baseUrl`, and `testAuth` the file's auth object
+   (a request-carried credential: one request on a route it guards). A failure gets R5's
+   unreachable-target recovery or R5 Fixing first.
+
+A file with destructive entries runs after every other file, one at a time, with no other
+discovery running.
 
 A file runs once: a re-run re-creates its objects, misses its deletes, and overwrites the first
 run's results. Entries still missing go into a new file or through `addEntrypoint`, by the

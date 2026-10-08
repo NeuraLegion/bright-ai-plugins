@@ -176,8 +176,9 @@ Use `runDiscovery` with `crawlerUrls` only for the gaps Step 1 listed — a larg
 reason. Pass `projectId`, a descriptive `name`, `crawlerUrls` seeded at the gap (not just the
 `baseUrl`), `repeaters` as a single-element array for private or local targets, and the
 `authObjectId` of the mechanism guarding the seeded area (none if public), one crawl per auth
-object. A user-supplied HAR or a synthesized OpenAPI document (`uploadApiDefinition`, then
-`runDiscovery` with its `fileId`) can fill a gap the same way.
+object. A user-supplied HAR (uploaded as `compose-har` Step 4 says) or a synthesized OpenAPI
+document (`uploadApiDefinition`), then `runDiscovery` with its `fileId`, can fill a gap the
+same way.
 
 For every discovery, poll `getDiscoveryStatus` until it completes, then read the
 results with `listDiscoveryEntrypoints` (`limit: 100`, following `next`) and
