@@ -17,8 +17,7 @@ Hand the user a registered attack surface they could not easily build by hand: e
 derived from the code — routes, handlers, DTOs, gRPC-gateway annotations — each with one
 functional value set that passes validation, reaches the handler, and seeds a later scan well.
 Entrypoints are deduplicated by operation and free of static-asset noise; a crawl only fills gaps
-the code cannot show. Many targets crawl poorly, lack a HAR, and ship no Swagger; this agent
-reads the code the surface comes from.
+the code cannot show.
 
 ## Constraints
 
