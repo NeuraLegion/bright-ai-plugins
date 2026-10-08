@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that the shared skills and agents stay in sync across the tool packages.
 
-Every tool package ships its own copy of the same six step skills and three
+Every tool package ships its own copy of the same seven step skills and three
 orchestration agents. The frontmatter is allowed to differ, because each tool
 wires things up its own way: Copilot's agents carry an `mcp-servers` block,
 Codex and Antigravity carry the agents as skills and drop `argument-hint`, and
@@ -41,6 +41,7 @@ PACKAGES = ["antigravity", "claude-code", "codex", "cursor", "github-copilot"]
 
 SHARED_SKILLS = [
     "analyze-codebase",
+    "compose-har",
     "fix-and-validate",
     "register-entrypoints",
     "run-scan",
@@ -110,7 +111,7 @@ def groups() -> list[tuple[str, Path, list[Path]]]:
 def check_orphans(covered: set[Path]) -> list[str]:
     """Flag component files the check does not know about.
 
-    Without this, adding a sixth tool package -- or a seventh skill -- would
+    Without this, adding a sixth tool package -- or an eighth skill -- would
     pass CI while being excluded from the very check meant to cover it.
     """
     problems = []
