@@ -1,6 +1,6 @@
 ---
 name: register-entrypoints
-description: Build the endpoint inventory from the source code and register its operations in Bright with code-grounded, functional parameter values — deduplicated by operation, JavaScript kept and static noise dropped, health read from the response Bright recorded, gaps named — crawling only as a justified fallback.
+description: Register the application's operations in Bright as entrypoints from its source code, with code-grounded parameter values, health checks, and named gaps; crawl only as a fallback.
 ---
 
 ## Register Entrypoints
@@ -232,4 +232,3 @@ Return:
 - duplicates merged and noise excluded, with counts
 - the discovery path — whitebox, plus any crawl, spec upload, or `compose-har` file with its
   `discoveryId` and justification
-- the auth map and the Repeater used

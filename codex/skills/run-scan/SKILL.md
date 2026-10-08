@@ -21,27 +21,21 @@ and `mutuallyExclusive` flags.
 4. Give any test flagged `mutuallyExclusive` a scan of its own — it cannot share one with
    other tests.
 
-Do not scan from a remembered list of tags. Bright ships far more tests than any fixed mapping
-would name and the catalogue changes between releases, so a hardcoded list silently narrows the
-scan to a fraction of the product. In particular, an API surface scanned without the
-access-control and object-authorization tests in the `api` and `business_logic` buckets will
-miss the most common API vulnerability classes.
+Do not scan from a remembered list of tags. For an API surface, include the access-control and
+object-authorization tests from the `api` and `business_logic` buckets.
 
 Keep the set as small as it can be while still covering the endpoint group. Do not include
 destructive or special-case tests unless the user explicitly asks for them.
 
 ### Step 2: Group scan work
 
-Group entrypoints by equivalent test set and by auth object, so the scan plan stays compact and
-easy to reuse. Entrypoints in one project can carry different auth objects; public ones, or ones
+Group entrypoints by equivalent test set and by auth object. Entrypoints in one project can carry different auth objects; public ones, or ones
 whose credential travels in the request, carry none. Read each one's `authObjectId` from
 `listEntrypoints` (`projectId`, `id`: the entrypoint IDs to scan, `limit: 100`, following
 `next`) instead of assuming one for the whole set. A group never mixes auth objects, because
 one that fails its check disrupts the whole scan.
 
-For each group, record the configuration below. A later validation scan has to reproduce it
-exactly to prove a fix worked, so this is the baseline the remediation loop reuses — not a
-restatement of the tool schema:
+Record per group; validation reruns reproduce it exactly:
 - `entrypointIds`
 - `tests`
 - `authObjectId` — the one its entrypoints carry, or none (for `testAuth`, not for `runScan`)

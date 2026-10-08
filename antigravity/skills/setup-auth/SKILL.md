@@ -30,7 +30,7 @@ accepted response after authenticating. Never edit a listed object.
 ### Step 3: Verify each mechanism before saving
 
 Iterate with `testAuth` on an unsaved payload (`authObject`) and call `addAuth` only once it
-verifies; failed saved attempts leave dead objects.
+verifies.
 
 Pick the `type` that reproduces how the credential is obtained and sent, and `reauthTriggers` that
 match the map's rejection (`401` and `403` by default). Set `test.request` to a route this mechanism
