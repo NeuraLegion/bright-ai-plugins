@@ -1,62 +1,62 @@
 ---
 name: setup-auth
-description: Detect application authentication requirements and create a working Bright auth object for scanning the target under test.
+description: Map the application's authentication mechanisms from its code and create a verified Bright auth object for each one the inventory needs.
 ---
 
 ## Setup Authentication
 
-### Step 1: Detect whether auth is required
+### Step 1: Build the auth map from the code
 
-Inspect the codebase for:
-- auth middleware and guards
-- login or token endpoints
-- bearer token, API key, session cookie, or custom header usage
-- login payload shape and token extraction path
+Read every router, middleware, guard, and handler-level check (e.g. bearer token, API key, session
+cookie, signature, custom header). Assign every inventory route to a public group or a mechanism,
+and record per mechanism, citing file and line:
 
-Capture:
-- `requiresAuth`
-- `authType`
-- `loginEndpoint`
-- `loginBody`
-- `headerName`
-- `headerTemplate`
-- `tokenJsonPath`
+- **guard** — what decides, including a handler or role check that differs from its middleware
+- **credential** — what it expects, for which principal
+- **obtained** — how the code issues it: login flow, key or token creation, exchange of another
+  credential, a secret seeded by config or set through another route group. Take test
+  credentials from seed data, fixtures, `.env.example`, or setup docs; never invent them
+- **sent** — where it travels, plus every other value the guard checks with it
+- **accepted / rejected** — what each path returns per the code: status, redirect target,
+  headers, body. A rejection is not always a 4xx
 
-When credentials are needed for a test login, prefer seed data, fixtures, `.env.example`,
-or repository setup docs. Do not invent credentials that have no evidence in the repo.
+### Step 2: Reuse an auth object that fits
 
-### Step 2: Reuse an existing auth object when one fits
+Call `listAuths` in the project resolved in `setup-repeater`. An object covers a mechanism only if
+its `test.request` (`getAuth`) is a route that mechanism guards, and `testAuth` with
+`includeEvidence` passes with the map's rejection in its `validation` result and the map's
+accepted response after authenticating. Never edit a listed object.
 
-Call `listAuths` in the project resolved in `setup-repeater`. If an existing object covers the
-same auth flow, verify it with `testAuth` and use it — there is nothing to create.
+### Step 3: Verify each mechanism before saving
 
-### Step 3: Verify the auth flow before saving anything
+Iterate with `testAuth` on an unsaved payload (`authObject`) and call `addAuth` only once it
+verifies; failed saved attempts leave dead objects.
 
-`testAuth` accepts an unsaved payload (`authObject`) as well as a saved object
-(`authObjectId`). Iterate on the unsaved payload and call `addAuth` only once it verifies.
-Creating the object first and fixing it afterwards leaves a dead auth object in the user's
-project for every failed attempt.
+Pick the `type` that reproduces how the credential is obtained and sent, and `reauthTriggers` that
+match the map's rejection (`401` and `403` by default). Set `test.request` to a route this mechanism
+guards. `testAuth` first sends it without the credential: a failed `validation` result means
+the route or the triggers miss the map's rejection; fix those, not the credential.
 
-Read the verdict explicitly: `verified=false`, or any entry in `tests[]` with `failed=true`,
-means auth is not verified. Do not proceed on a partial pass.
+Read the verdict explicitly: `verified=false`, or any entry in `tests[]` with `failed=true`, means
+auth is not verified. Do not proceed on a partial pass.
 
-Correct the payload from the per-result evidence the test returns. Common causes — not an
-exhaustive list — are the login body shape, token extraction, header name or format, the login
-endpoint path and content type, and reachability of the target (through the Repeater for
-private or local targets).
+Correct the payload from per-result evidence. Common causes: the login body shape, token extraction,
+header name or format, a value the guard checks that the payload omits, the login path and content
+type, and reachability (through the Repeater for private or local targets). Obtain a credential that
+depends on another mechanism after that one; if that one is a gap, so is this one. If no auth object
+type can attach a credential where the guard reads it, `curl` a guarded route with and without it
+against the map, and hand it to `register-entrypoints`.
 
-Retry up to 10 times. If auth is still broken, stop and report the exact reason.
+After 10 failed attempts at a mechanism, its route group is a gap: record the request you sent and
+quote the response. A hypothesis is not evidence.
 
-### Step 4: Save the verified auth object
+### Step 4: Save the verified auth objects
 
-Call `addAuth` with the payload that verified, in the project resolved in `setup-repeater`. Set
-`repeaterRequired: true` for private or local targets, so the login itself runs through the
-connected Repeater, and configure `reauthTriggers` for `401` and `403` responses.
+Call `addAuth` for each verified payload in that project, named after its mechanism. Set
+`repeaterRequired: true` for private or local targets, and keep the `reauthTriggers` that verified.
 
 ### Output
 
-Return:
-- `authObjectId` or `null`
-- auth type summary
-- login endpoint used
-- any assumptions or unresolved blockers
+Return the auth map: per mechanism, its route groups and guard, the credential's source and
+transport, and its `authObjectId`, request-carried credential, or gap with the quoted response;
+public groups; assumptions and blockers.
