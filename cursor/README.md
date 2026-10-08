@@ -1,7 +1,7 @@
 # Bright Security — Cursor plugin
 
 Bright DAST (Dynamic Application Security Testing) agents and skills, packaged for Cursor.
-The plugin wires three orchestration agents and six skills to the **Bright MCP server**, so Cursor
+The plugin wires three orchestration agents and seven skills to the **Bright MCP server**, so Cursor
 can analyze an app, reach a target, register attack surface, run scans, and remediate findings —
 in desktop Cursor or in Cursor Cloud Agents.
 
@@ -15,7 +15,8 @@ in desktop Cursor or in Cursor Cloud Agents.
     code, register the endpoints in Bright with values that pass validation, and report what it
     couldn't register and why — no scanning, no code changes.
 - **Skills** (`skills/`) — `analyze-codebase`, `setup-repeater`, `setup-auth`,
-  `register-entrypoints`, `run-scan`, `fix-and-validate`. The agents call these as building blocks.
+  `register-entrypoints`, `compose-har`, `run-scan`, `fix-and-validate`. The agents call these as
+  building blocks.
 - **MCP** (`mcp.json`) — the Bright MCP server over HTTP.
 
 ---

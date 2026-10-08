@@ -5,12 +5,12 @@ bundles the Bright skills; the Bright MCP server gives Codex the tools to config
 scans, and retrieve findings.
 
 Codex has no separate "agent" type, so the three orchestration workflows ship as **skills** alongside
-the six step skills:
+the seven step skills:
 
 - **Orchestration skills:** `bright-application-testing`, `bright-remediation-loop`,
   `bright-discovery`
 - **Step skills:** `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`,
-  `run-scan`, `fix-and-validate`
+  `compose-har`, `run-scan`, `fix-and-validate`
 
 ---
 

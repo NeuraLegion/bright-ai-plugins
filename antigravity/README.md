@@ -6,12 +6,12 @@ Bright skills; the Bright MCP server gives `agy` the tools to configure Bright, 
 retrieve findings.
 
 Antigravity has no separate "agent" type, so the three orchestration workflows ship as **skills**
-alongside the six step skills:
+alongside the seven step skills:
 
 - **Orchestration skills:** `bright-application-testing`, `bright-remediation-loop`,
   `bright-discovery`
 - **Step skills:** `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`,
-  `run-scan`, `fix-and-validate`
+  `compose-har`, `run-scan`, `fix-and-validate`
 
 The always-on safety constraints (authorization, Repeater-for-private, an explicit Bright
 project, no endpoints with effects you cannot undo) are embedded in the orchestration skills.

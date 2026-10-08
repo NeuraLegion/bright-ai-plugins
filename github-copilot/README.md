@@ -11,7 +11,7 @@ It works on two surfaces:
 - **CLI agents** (`agents/*.agent.md`): `bright-application-testing`, `bright-remediation-loop`,
   `bright-discovery`.
 - **Skills** (`skills/*/SKILL.md`): `analyze-codebase`, `setup-repeater`, `setup-auth`,
-  `register-entrypoints`, `run-scan`, `fix-and-validate`.
+  `register-entrypoints`, `compose-har`, `run-scan`, `fix-and-validate`.
 - **Coding-agent agents** (`.github/agents/*.md`): the same three agents, with `mcp-servers`
   frontmatter using `${{ vars.BRIGHT_HOSTNAME }}` / `${{ secrets.BRIGHT_TOKEN }}`.
 

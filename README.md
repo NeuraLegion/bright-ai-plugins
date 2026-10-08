@@ -4,7 +4,7 @@ Bright Security DAST agents and skills, installable the **native way** into ever
 coding tool from this single repository: Cursor, Claude Code, Codex, GitHub Copilot,
 and Antigravity CLI.
 
-Every package wires the **same three agents** and **six skills** to the Bright MCP server:
+Every package wires the **same three agents** and **seven skills** to the Bright MCP server:
 
 **Agents**
 - `bright-application-testing` — analyze the repo, reach the target (local, staging, or any
@@ -17,7 +17,7 @@ Every package wires the **same three agents** and **six skills** to the Bright M
   register and why — no scanning, no code changes.
 
 **Skills**
-- `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `run-scan`, `fix-and-validate`
+- `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `compose-har`, `run-scan`, `fix-and-validate`
 
 ## Packages
 
@@ -161,7 +161,7 @@ app you asked about on staging scans the wrong thing.
 ```
 
 ## Keeping the packages in sync
-Every package ships the same six step skills and three orchestration agents. Only the
+Every package ships the same seven step skills and three orchestration agents. Only the
 frontmatter differs per tool — Copilot's agents carry an `mcp-servers` block, Codex and
 Antigravity carry the agents as skills without an `argument-hint`. The instructions below the
 frontmatter must be identical everywhere, so a change to one package has to reach all of them.
