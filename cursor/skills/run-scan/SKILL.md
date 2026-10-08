@@ -62,7 +62,8 @@ already carries its own.
 
 1. Poll `getScanStatus` until every scan finishes.
 2. If a scan fails, verify the local app and that group's auth object before retrying.
-3. Fetch findings with `listScanVulnerabilities` (per scan); get full detail for a finding with `getScanVulnerability`.
+3. Fetch findings with `listScanVulnerabilities` (per scan); get full detail for a finding with
+   `getScanVulnerability` (`includeEvidence: true` when you need the request and response).
 
 ### Output
 
@@ -72,3 +73,6 @@ Return:
 - final status for each scan
 - finding list with severity, method, URL, evidence, and remedy
 - the exact scan configuration needed for validation reruns
+
+MCP scans attack body, query, and fragment parameters only; path and header parameters are not
+mutated. Report endpoints whose input is only in the path or headers as a coverage gap.

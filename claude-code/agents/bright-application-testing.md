@@ -64,8 +64,6 @@ Collect:
 - the endpoint inventory with method, path, sample body, sample query, and content type,
   and the endpoints excluded as unsafe to fuzz
 
-Present the planned target surface before scanning.
-
 ### Phase 2: Reach the application target
 
 Start from what the user told you. If they named a target URL, a deploy command, a Helm release,

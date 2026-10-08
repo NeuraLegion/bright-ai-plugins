@@ -95,12 +95,6 @@ Start the Bright CLI Repeater:
 npx @brightsec/cli repeater --id <REPEATER_ID> --hostname "$BRIGHT_HOSTNAME" --token "$BRIGHT_TOKEN"
 ```
 
-If the CLI is not installed:
-
-```bash
-npm install -g @brightsec/cli
-```
-
 ### Step 4: Verify connectivity
 
 1. Poll `listRepeaters` until the Repeater is connected. This call goes through the MCP server,

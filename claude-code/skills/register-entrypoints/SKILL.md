@@ -142,8 +142,7 @@ change you can read back). A redirect, empty list, or bare 2xx alone is not proo
 it should show (Step 2) and check again, or count it unhealthy. Unhealthy is no `response`
 object (Bright got no answer — check `testAuth`, the target, and the Repeater first), any 4xx or
 5xx, or a `text/html` SPA `index.html` shell on a route that should return JSON or a file. The
-top-level `status` (`new`/`changed`/`tested`/`vulnerable`) is the security status, not health;
-if the tool also returns `connectivity`, anything other than `ok` is unhealthy.
+top-level `status` (`new`/`changed`/`tested`/`vulnerable`) is the security status, not health.
 
 **Evidence.** Every gap, health verdict, and runtime-based exclusion cites a request actually
 sent and quotes its response. Never register an unevidenced value (an invented ID, another
@@ -183,8 +182,7 @@ object. A user-supplied HAR or a synthesized OpenAPI document (`uploadApiDefinit
 For every discovery, poll `getDiscoveryStatus` until it completes, then read the
 results with `listDiscoveryEntrypoints` (`limit: 100`, following `next`) and
 `getDiscoveryEntrypoint`. Results are discovery-scoped: `editEntrypoint` and `deleteEntrypoint`
-need the project entrypoint ID, from the entry's target entrypoint mapping or the same method and
-URL in `listEntrypoints`. Put every result through Steps 3–4 (delete duplicates and noise), then
+need the project entrypoint ID, from its `targetEntrypointId`. Put every result through Steps 3–4 (delete duplicates and noise), then
 give the survivors Step 2 values, their route group's `authObjectId`, and Step 5 health checks.
 
 If a discovery came back thin, check `getDiscoveryWarnings` (unreachable or unauthenticated
@@ -203,8 +201,8 @@ Read this target's entrypoints with `listEntrypoints` (`projectId`,
 2. Reconcile health: `getEntrypoint` every listed entrypoint not read since its last edit
    (`listEntrypoints` has no parameters or health), and build the final table from the reads:
    ID, method, URL, `authObjectId`, the parameters in `request`, `response.status` and content
-   type. Only a response on the handler's success path (Step 5) is healthy; no response,
-   `unauthorized`, a 4xx or 5xx, or an empty 2xx where seeded data should match is unhealthy.
+   type. Only a response on the handler's success path (Step 5) is healthy; no response, a 4xx
+   or 5xx, or an empty 2xx where seeded data should match is unhealthy.
 3. Confirm no two entrypoints cover one operation, no static noise remains (JavaScript kept), and
    every unhealthy entrypoint has been through Step 5 Fixing — fixed, kept as unhealthy with its
    response quoted, or deleted as a gap.
