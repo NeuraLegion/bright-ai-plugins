@@ -5,11 +5,11 @@ description: Build the endpoint inventory from the source code and register its 
 
 ## Register Entrypoints
 
-Reuse the `projectId` and Repeater from `setup-repeater` and the auth map from `setup-auth`
-instead of creating new ones; Step 5 says when each is attached. Bright sends the
-real request to the target on every `addEntrypoint` and `editEntrypoint`, so registration has
-side effects. Without a user-set time, cost, or count budget, never narrow the inventory to save
-effort; if an external limit stops the run, name every unprocessed operation and why.
+Reuse the `projectId` and Repeater from `setup-repeater` and the auth map from `setup-auth`;
+Step 5 says when each is attached. Bright sends the real request to the target on every
+`addEntrypoint` and `editEntrypoint`, so registration has side effects. Without a user-set time,
+cost, or count budget, never narrow the inventory to save effort; if an external limit stops the
+run, name every unprocessed operation and why.
 
 ### Step 1: Complete the inventory from the code
 
@@ -23,7 +23,7 @@ verify it from the code, recording per operation:
 - every query parameter and request header this handler reads — framework accessors (e.g.
   `QueryParam(...)`, `request.args`, `req.query`, header getters) and bind/DTO tags — not a set
   copied from a neighbouring route
-- the handler identity (file plus function, or RPC name), which Step 3 relies on
+- the handler identity (file plus function, or RPC name) for Step 3
 - if the app serves a built frontend: the JavaScript the served `index.html` references (`curl`
   the `baseUrl`), its service worker, and the chunks they load, or the build output directory
   (e.g. `dist/`). Frontend source with no bundle in the served `index.html` is a JavaScript
@@ -35,9 +35,8 @@ That list is the only input to Step 6.
 
 ### Step 2: Craft functional parameter values
 
-Every path, query, body, and header value must pass validation and seed mutation well; empty or
-nonsensical values give a scan nothing. Build each request from a concrete URL on `baseUrl`,
-deriving every value from the code:
+Every path, query, body, and header value must pass validation and seed mutation well. Build
+each request from a concrete URL on `baseUrl`, deriving every value from the code:
 
 - **Enums and constants** — the exact member and casing (`OAUTH2`, not `oauth2`); a real key from
   an enumerated set, not `"test"`.
@@ -107,19 +106,21 @@ citing the handler.
 ### Step 5: Register and verify
 
 Register reads and creates first, then updates, and destructive operations (delete, deactivate,
-reset, purge, vacuum, revoke…) last, each against a sacrificial object from Step 2. Never target
+reset, purge, revoke…) last, each against a sacrificial object from Step 2. Never target
 the user, session, or credential an auth object depends on, or objects other entrypoints
-reference — deleting the only user breaks its auth object and later registrations.
+reference.
 
 **Shipped spec first.** If the repository ships a machine-readable API definition
-(OpenAPI/Swagger, or a template that renders one), register the surface it describes from it;
-the code inventory stays the source of truth. Render or copy it to the run's temp directory and
-diff its operations with the Step 1 inventory both ways: drop from the copy what the code
-does not define, what Step 4 excludes, and destructive operations (registered by hand, last);
-register by hand every inventory operation it lacks. `uploadApiDefinition` the copy (base64
-`content` + `filename`, or `url` if the app serves it unchanged), then `runDiscovery` with the
-`fileId`, the Repeater, and the `authObjectId` guarding that surface. Handle the results as
-Step 6 says; spec examples alone are not evidence.
+(OpenAPI/Swagger, or a template that renders one), register its surface from it; the code
+inventory stays the source of truth. Render or copy it to the run's temp directory, point its
+server URL at the API's mount on `baseUrl` (OAS3 `servers`; Swagger 2 `schemes`, `host`,
+`basePath`), and diff its operations with the Step 1 inventory both ways: drop from the copy
+what the code does not define or Step 4 excludes, plus scan-risk and destructive operations
+(register those by hand, in this step's order); register by hand every inventory operation it
+lacks. `uploadApiDefinition` the copy (base64 `content` + `filename`, or `url` if the app
+serves it unchanged), then `runDiscovery` with the `fileId`, the Repeater, and the
+`authObjectId` guarding that surface. Handle the results as Step 6 says, health-checking one
+before editing the rest; delete any on another host. Spec examples alone are not evidence.
 
 Register each operation with `addEntrypoint`: `projectId`; `request` with `method`, `url`,
 `headers` as an object of name→string array (including the content type), and `body`;
@@ -183,14 +184,12 @@ give the survivors Step 2 values, their route group's `authObjectId`, and Step 5
 
 If a discovery came back thin, check `getDiscoveryWarnings` (unreachable or unauthenticated
 routes) and `getDiscoveryLogs` (the request trace) before concluding the surface is small —
-usually a missing or expired auth object, seeds that never link deeper, or an unreachable
-Repeater.
+usually a missing or expired auth object, shallow seeds, or an unreachable Repeater.
 
 ### Step 7: Final review
 
 Read this target's entrypoints with `listEntrypoints` (`projectId`,
-`host: ["<host[:port] of baseUrl>"]`, `limit: 100`), following `next` to
-the end. Then:
+`host: ["<host[:port] of baseUrl>"]`, `limit: 100`), following every `next`. Then:
 
 1. Diff the Step 1 inventory — operations and JavaScript — against that list, one by one: each
    item is covered by an entrypoint ID, excluded with its evidence, or missing. Register what is

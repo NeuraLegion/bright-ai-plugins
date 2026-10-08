@@ -156,10 +156,12 @@ Return:
   frontend was served
 - the registered attack surface: the `register-entrypoints` counts line, then entrypoint IDs
   with method, URL, the stored parameter values and the response status Bright recorded (from
-  `getEntrypoint`), unhealthy ones listed separately
+  `getEntrypoint`), unhealthy ones listed separately inline; a large set may go to a file in
+  the run's temp directory, path printed, as the skill's Output allows
 - **scan-risk entrypoints:** operations registered but flagged as dangerous under fuzzing, with
   a one-line reason each citing handler evidence
-- the discovery path — whitebox, plus any fallback crawl with its justification
+- the discovery path — whitebox, plus any shipped-spec upload and any fallback crawl, each with
+  its `discoveryId`, and the crawl's justification
 - duplicates merged and noise excluded
 - **the auth map:** the public route groups, and each mechanism with its route groups, the
   guard's file and line, and either its auth object ID (supplied, reused, or created) or a
