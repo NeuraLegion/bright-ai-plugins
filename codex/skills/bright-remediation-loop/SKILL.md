@@ -72,7 +72,8 @@ a script, or an environment, follow that rather than a method inferred from the 
 5. Build the auth map and its auth objects with `setup-auth` when needed.
 6. Register entrypoints with `register-entrypoints`. Load its full instructions rather than
    working from this line, and keep the `analyze-codebase` exclusions. The baseline scan uses its
-   final active set of entrypoint IDs.
+   final active set of entrypoint IDs. Load `compose-har` the same way if `register-entrypoints`
+   sends routes there.
 
 ### Phase 1a: Can this loop actually close?
 

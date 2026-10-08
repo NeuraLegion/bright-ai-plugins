@@ -6,10 +6,10 @@ description: Build the endpoint inventory from the source code and register its 
 ## Register Entrypoints
 
 Reuse the `projectId` and Repeater from `setup-repeater` and the auth map from `setup-auth`;
-Step 5 says when each is attached. Bright sends the real request to the target on every
-`addEntrypoint` and `editEntrypoint`, so registration has side effects. Without a user-set time,
-cost, or count budget, never narrow the inventory to save effort; if an external limit stops the
-run, name every unprocessed operation and why.
+Step 5 says when each is attached. Every `addEntrypoint` and `editEntrypoint` runs its auth
+object's full login and sends the real request to the target, so registration has side effects.
+Without a user-set time, cost, or count budget, never narrow the inventory to save effort; if an
+external limit stops the run, name every unprocessed operation and why.
 
 ### Step 1: Complete the inventory from the code
 
@@ -110,17 +110,22 @@ reset, purge, revoke…) last, each against a sacrificial object from Step 2. Ne
 the user, session, or credential an auth object depends on, or objects other entrypoints
 reference.
 
-**Shipped spec first.** If the repository ships a machine-readable API definition
-(OpenAPI/Swagger, or a template that renders one), register its surface from it; the code
-inventory stays the source of truth. Render or copy it to the run's temp directory, point its
-server URL at the API's mount on `baseUrl` (OAS3 `servers`; Swagger 2 `schemes`, `host`,
-`basePath`), and diff its operations with the Step 1 inventory both ways: drop from the copy
-what the code does not define or Step 4 excludes, plus scan-risk and destructive operations
-(register those by hand, in this step's order); register by hand every inventory operation it
-lacks. `uploadApiDefinition` the copy (base64 `content` + `filename`, or `url` if the app
-serves it unchanged), then `runDiscovery` with the `fileId`, the Repeater, and the
-`authObjectId` guarding that surface. Handle the results as Step 6 says, health-checking one
-before editing the rest; delete any on another host. Spec examples alone are not evidence.
+**Register through a file.** Per auth object, request-carried credential, or public routes: when
+the auth object obtains its credential through requests (not static headers alone) and more than
+10 of its operations remain, when more than 50 remain, or once a registration meets a login rate
+limit or lockout, register the rest with the `compose-har` skill, loaded in full, and verify
+them once each discovery completes; a shipped spec only informs their Steps 1–2. For the others,
+if the repository ships a machine-readable API definition (OpenAPI/Swagger, or a template that
+renders one), register their surface from it; the code inventory stays the source of truth.
+Render or copy it to the run's temp directory, point its server URL at the API's mount on
+`baseUrl` (OAS3 `servers`; Swagger 2 `schemes`, `host`, `basePath`), and diff its operations
+with the Step 1 inventory both ways: drop from the copy what the code does not define, Step 4
+excludes, or `compose-har` registers, plus scan-risk and destructive operations (register those
+by hand, in this step's order); register by hand every inventory operation it lacks.
+`uploadApiDefinition` the copy (base64 `content` + `filename`, or `url` if the app serves it
+unchanged), then `runDiscovery` with the `fileId`, the Repeater, and the `authObjectId` guarding
+that surface. Handle the results as Step 6 says, health-checking one before editing the rest;
+delete any on another host. Spec examples alone are not evidence.
 
 Register each operation with `addEntrypoint`: `projectId`; `request` with `method`, `url`,
 `headers` as an object of name→string array (including the content type), and `body`;
@@ -175,7 +180,7 @@ reason. Pass `projectId`, a descriptive `name`, `crawlerUrls` seeded at the gap 
 object. A user-supplied HAR or a synthesized OpenAPI document (`uploadApiDefinition`, then
 `runDiscovery` with its `fileId`) can fill a gap the same way.
 
-For every discovery, crawl or spec, poll `getDiscoveryStatus` until it completes, then read the
+For every discovery, poll `getDiscoveryStatus` until it completes, then read the
 results with `listDiscoveryEntrypoints` (`limit: 100`, following `next`) and
 `getDiscoveryEntrypoint`. Results are discovery-scoped: `editEntrypoint` and `deleteEntrypoint`
 need the project entrypoint ID, from the entry's target entrypoint mapping or the same method and
@@ -227,6 +232,6 @@ Return:
 - excluded operations with handler evidence, and coverage gaps with evidence for each missed or
   pruned route
 - duplicates merged and noise excluded, with counts
-- the discovery path — whitebox, plus any crawl or spec upload with its `discoveryId` and
-  justification
+- the discovery path — whitebox, plus any crawl, spec upload, or `compose-har` file with its
+  `discoveryId` and justification
 - the auth map and the Repeater used

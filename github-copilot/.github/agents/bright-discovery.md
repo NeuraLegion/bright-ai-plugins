@@ -144,6 +144,8 @@ runs reach every authenticated route group.
 
 Complete the `analyze-codebase` inventory from the code, craft code-grounded parameter values,
 deduplicate by operation, register, verify health, and fall back to a crawl only when justified.
+When the skill sends routes to `compose-har`, load that skill's full instructions the same
+way before composing.
 
 ### Phase 6: Review and prune
 
@@ -158,7 +160,8 @@ Every number and list in the Output comes from the last read-back.
 
 Return:
 - **skills loaded** (required, first line): every skill whose full instructions you loaded, each
-  with the path you read or `Skill tool`
+  with the path you read or `Skill tool`; it includes `compose-har` whenever the discovery path
+  lists a `compose-har` file
 - detected stack and startup command (or the supplied target URL), and whether the built
   frontend was served
 - the registered attack surface: the `register-entrypoints` counts line, then entrypoint IDs
@@ -167,8 +170,8 @@ Return:
   the run's temp directory, path printed, as the skill's Output allows
 - **scan-risk entrypoints:** operations registered but flagged as dangerous under fuzzing, with
   a one-line reason each citing handler evidence
-- the discovery path — whitebox, plus any shipped-spec upload and any fallback crawl, each with
-  its `discoveryId`, and the crawl's justification
+- the discovery path — whitebox, plus any shipped-spec upload, `compose-har` file, and fallback
+  crawl, each with its `discoveryId`, and the crawl's justification
 - duplicates merged and noise excluded
 - **the auth map:** the public route groups, and each mechanism with its route groups, the
   guard's file and line, and either its auth object ID (supplied, reused, or created) or a

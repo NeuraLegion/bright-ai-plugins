@@ -123,6 +123,7 @@ each is stable or you hit the retry ceiling.
 
 Load the full instructions of the `register-entrypoints` skill before registering anything, as
 the skill-loading constraint describes. Do not work from this summary.
+Load `compose-har` the same way when `register-entrypoints` sends routes there.
 
 Register the retained endpoints from the code with functional parameter values, one entrypoint per
 operation, and crawl only for surface the code cannot show. Keep the `analyze-codebase`
