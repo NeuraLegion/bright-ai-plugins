@@ -1,7 +1,7 @@
 # Bright Security — Claude Code plugin
 
 Bright DAST (Dynamic Application Security Testing) agents and skills, packaged for Claude Code.
-The plugin wires two orchestration agents and six skills to the **Bright MCP server**, so Claude
+The plugin wires three orchestration agents and seven skills to the **Bright MCP server**, so Claude
 Code can analyze an app, reach a target, register attack surface, run scans, and remediate
 findings — all from your terminal.
 
@@ -11,8 +11,12 @@ findings — all from your terminal.
     attack surface, and run DAST scans (through a Repeater for private/local targets).
   - `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run validation
     scans until findings are gone.
+  - `bright-discovery` — analyze the repo, reach the target, build the endpoint list from the
+    code, register the endpoints in Bright with values that pass validation, and report what it
+    couldn't register and why — no scanning, no code changes.
 - **Skills** (`skills/`) — `analyze-codebase`, `setup-repeater`, `setup-auth`,
-  `register-entrypoints`, `run-scan`, `fix-and-validate`. The agents call these as building blocks.
+  `register-entrypoints`, `compose-har`, `run-scan`, `fix-and-validate`. The agents call these as
+  building blocks.
 - **MCP** (`.mcp.json`) — the Bright MCP server over HTTP.
 
 ---
@@ -39,7 +43,7 @@ claude plugin install bright-security@brightsec
 ```
 
 That's it — the plugin is enabled on install. Verify with `claude plugin list` (should show
-`bright-security@brightsec → enabled`), or inside a session run `/agents` to see the two Bright
+`bright-security@brightsec → enabled`), or inside a session run `/agents` to see the three Bright
 agents.
 
 ---
@@ -51,6 +55,7 @@ Ask for an agent in plain language — Claude delegates to it:
 ```
 > Use the bright-application-testing agent to scan this app
 > Use the bright-remediation-loop agent to scan, fix, and re-verify
+> Use the bright-discovery agent to discover and register this app's endpoints
 ```
 
 Or **@-mention** it to guarantee that exact agent runs:

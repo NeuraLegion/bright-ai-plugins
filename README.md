@@ -4,7 +4,7 @@ Bright Security DAST agents and skills, installable the **native way** into ever
 coding tool from this single repository: Cursor, Claude Code, Codex, GitHub Copilot,
 and Antigravity CLI.
 
-Every package wires the **same two agents** and **six skills** to the Bright MCP server:
+Every package wires the **same three agents** and **seven skills** to the Bright MCP server:
 
 **Agents**
 - `bright-application-testing` — analyze the repo, reach the target (local, staging, or any
@@ -12,9 +12,12 @@ Every package wires the **same two agents** and **six skills** to the Bright MCP
   (through a Repeater for private/local targets).
 - `bright-remediation-loop` — run DAST, apply minimal fixes, restart, and re-run the same
   validation scans until findings are gone.
+- `bright-discovery` — analyze the repo, reach the target, build the endpoint list from the code,
+  register the endpoints in Bright with values that pass validation, and report what it couldn't
+  register and why — no scanning, no code changes.
 
 **Skills**
-- `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `run-scan`, `fix-and-validate`
+- `analyze-codebase`, `setup-repeater`, `setup-auth`, `register-entrypoints`, `compose-har`, `run-scan`, `fix-and-validate`
 
 ## Packages
 
@@ -27,8 +30,8 @@ README:
 - **GitHub Copilot** — [`github-copilot/`](./github-copilot/)
 - **Antigravity CLI** — [`antigravity/`](./antigravity/)
 
-The `cursor/` package is the canonical source the others mirror. Codex and Antigravity have no
-separate agent type, so their two orchestration workflows ship as skills.
+The `claude-code/` package is the canonical source the others mirror. Codex and Antigravity have no
+separate agent type, so their three orchestration workflows ship as skills.
 
 Marketplace manifests live at the repo root — `.cursor-plugin/marketplace.json`,
 `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`,
@@ -36,7 +39,7 @@ Marketplace manifests live at the repo root — `.cursor-plugin/marketplace.json
 `bright-security`.
 
 ## Required environment (all packages)
-- `BRIGHT_HOSTNAME` — Bright cluster hostname (e.g. `app.brightsec.com`)
+- `BRIGHT_HOSTNAME` — Bright cluster hostname, host only, no `https://` (e.g. `app.brightsec.com`)
 - `BRIGHT_TOKEN` — Bright API token (used by the MCP server and the Bright CLI Repeater)
 - **A Bright project** — everything a run creates (Repeater, auth object, entrypoints, scans)
   is scoped to one project. With a **project-scoped** `BRIGHT_TOKEN` there is only one project
@@ -61,12 +64,12 @@ second agent closes the loop by proving the fix, instead of leaving you a report
 
 ### Which agent
 
-| | `bright-application-testing` | `bright-remediation-loop` |
-| --- | --- | --- |
-| Does | Scans and reports | Scans, edits code, re-scans until the finding is gone |
-| Touches your code | No | **Yes** |
-| Also needs | — | A way to get fixes into the running target |
-| Reach for it when | You want to know what's exposed | You want it fixed and the fix proved |
+| | `bright-application-testing` | `bright-remediation-loop` | `bright-discovery` |
+| --- | --- | --- | --- |
+| Does | Scans and reports | Scans, edits code, re-scans until the finding is gone | Discovers attack surface and registers entrypoints |
+| Touches your code | No | **Yes** | No |
+| Also needs | — | A way to get fixes into the running target | — |
+| Reach for it when | You want to know what's exposed | You want it fixed and the fix proved | Your targets are hard to crawl, you lack Swagger/HAR files, or you want the endpoints from your code registered and checked before scanning |
 
 The remediation loop's value is the *proof*: a finding counts as fixed only when the same scan,
 over the same entrypoints and tests, stops reporting it. That requires your edited code to be
@@ -131,6 +134,22 @@ changed alongside the evidence that each change worked.
 Tell it how to redeploy — without that it can scan and write fixes but can't verify them, and it
 will stop and ask before spending a scan rather than reporting unverified edits as remediated.
 
+### 5. Map the attack surface without scanning
+
+Your targets crawl poorly, you have no Swagger spec, and you don't want to hand-build HAR
+files. The discovery agent reads the code, builds the endpoint list from it, works out parameter
+values that pass validation, and registers them in Bright — ready for a scan later.
+
+```
+> Use the bright-discovery agent to discover and register this app's endpoints, Bright project "acme-api"
+```
+
+It reads routes, handlers, and DTOs, reaches the target, and registers each endpoint directly
+with realistic parameter values. It collapses duplicates of the same operation, skips static
+assets (keeping JavaScript), crawls only to fill gaps the code cannot show, and prunes anything
+that doesn't connect. You get a checked entrypoint list — IDs, methods, URLs, populated
+parameters, health — with unhealthy entrypoints and gaps named. No scan is run.
+
 ### If your app doesn't start with `docker compose`
 
 Say how it runs and the agents follow that instead of guessing from the repository. A
@@ -142,7 +161,7 @@ app you asked about on staging scans the wrong thing.
 ```
 
 ## Keeping the packages in sync
-Every package ships the same six step skills and two orchestration agents. Only the
+Every package ships the same seven step skills and three orchestration agents. Only the
 frontmatter differs per tool — Copilot's agents carry an `mcp-servers` block, Codex and
 Antigravity carry the agents as skills without an `argument-hint`. The instructions below the
 frontmatter must be identical everywhere, so a change to one package has to reach all of them.
@@ -155,7 +174,9 @@ python3 scripts/check_package_sync.py         # verify; this is what CI runs
 ```
 
 The check also fails on a component it doesn't know about, so a new package or skill can't
-be added while silently sitting outside the check.
+be added while silently sitting outside the check. It also fails when the plugin and
+marketplace manifests disagree on the plugin or marketplace name, or on the version — bump all
+of them together.
 
 ## Safety
 Only scan targets you own or are explicitly authorized to test — a local dev server, a

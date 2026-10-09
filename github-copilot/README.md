@@ -8,10 +8,11 @@ It works on two surfaces:
 
 ## What's inside
 - **`plugin.json`** — Copilot CLI plugin manifest (points at `agents/` and `skills/`).
-- **CLI agents** (`agents/*.agent.md`): `bright-application-testing`, `bright-remediation-loop`.
+- **CLI agents** (`agents/*.agent.md`): `bright-application-testing`, `bright-remediation-loop`,
+  `bright-discovery`.
 - **Skills** (`skills/*/SKILL.md`): `analyze-codebase`, `setup-repeater`, `setup-auth`,
-  `register-entrypoints`, `run-scan`, `fix-and-validate`.
-- **Coding-agent agents** (`.github/agents/*.md`): the same two agents, with `mcp-servers`
+  `register-entrypoints`, `compose-har`, `run-scan`, `fix-and-validate`.
+- **Coding-agent agents** (`.github/agents/*.md`): the same three agents, with `mcp-servers`
   frontmatter using `${{ vars.BRIGHT_HOSTNAME }}` / `${{ secrets.BRIGHT_TOKEN }}`.
 
 ---
@@ -57,6 +58,7 @@ Run an agent and describe the task:
 ```bash
 copilot --agent bright-application-testing -i "Scan this app"
 copilot --agent bright-remediation-loop -i "Scan, fix, and re-verify"
+copilot --agent bright-discovery -i "Discover and register this app's endpoints"
 ```
 
 `-i` starts an interactive session with that first prompt. For non-interactive/scripted runs use
@@ -81,11 +83,12 @@ MCP server (step 3 above) once.
 
 ```bash
 git clone https://github.com/NeuraLegion/bright-ai-plugins
-copilot --plugin-dir /path/to/bright-ai-plugins/github-copilot --agent bright-application-testing -i "Scan this app"
+copilot --plugin-dir /path/to/bright-ai-plugins/github-copilot --agent bright-security:bright-application-testing -i "Scan this app"
 ```
 
 `--plugin-dir` loads the agents and skills from the directory without a marketplace install (repeat
-it to load more than one).
+it to load more than one). Under `--plugin-dir`, agents are namespaced as `bright-security:<agent>`,
+and the global option goes before a subcommand (`copilot --plugin-dir <dir> plugin list`).
 
 ### Copilot coding agent (github.com)
 

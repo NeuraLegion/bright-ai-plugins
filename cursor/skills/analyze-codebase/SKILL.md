@@ -10,12 +10,7 @@ description: Detect the technology stack and inventory the HTTP endpoints that c
 Read top-level files such as `package.json`, `go.mod`, `requirements.txt`, `Gemfile`,
 `pom.xml`, `Cargo.toml`, `Dockerfile`, and `docker-compose.yml`.
 
-Identify:
-- languages
-- frameworks
-- databases
-- startup commands
-- likely ports
+Identify languages, frameworks, databases, startup commands, and likely ports.
 
 ### Step 2: Find route definitions or API definitions
 
@@ -25,18 +20,6 @@ Look for:
 - controller files
 - route files
 - framework decorators and middleware that define endpoints
-
-Framework-oriented search patterns:
-
-| Framework | File patterns |
-|-----------|---------------|
-| Express or Fastify | `src/**/*.routes.{ts,js}`, `src/**/*.controller.{ts,js}`, `routes/**/*.{ts,js}` |
-| NestJS | `src/**/*.controller.ts` |
-| Django | `**/urls.py` |
-| Flask or FastAPI | `**/*.py` with route decorators |
-| Rails | `config/routes.rb`, `app/controllers/**/*.rb` |
-| Spring | `**/*Controller.java`, `**/*Resource.java` |
-| Go | `**/*handler*.go`, `**/*router*.go`, `**/routes.go` |
 
 ### Step 3: Extract endpoints
 

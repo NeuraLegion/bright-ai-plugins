@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that the shared skills and agents stay in sync across the tool packages.
 
-Every tool package ships its own copy of the same six step skills and two
+Every tool package ships its own copy of the same seven step skills and three
 orchestration agents. The frontmatter is allowed to differ, because each tool
 wires things up its own way: Copilot's agents carry an `mcp-servers` block,
 Codex and Antigravity carry the agents as skills and drop `argument-hint`, and
@@ -22,12 +22,16 @@ So the rule enforced here is:
 
 `claude-code` is the canonical copy. Run with --fix to rewrite every variant's
 body from it, keeping each variant's own frontmatter.
+
+It also checks that every plugin and marketplace manifest carries the expected
+name and that all of them share one version; --fix reports but never edits those.
 """
 
 from __future__ import annotations
 
 import argparse
 import difflib
+import json
 import sys
 from pathlib import Path
 
@@ -37,6 +41,7 @@ PACKAGES = ["antigravity", "claude-code", "codex", "cursor", "github-copilot"]
 
 SHARED_SKILLS = [
     "analyze-codebase",
+    "compose-har",
     "fix-and-validate",
     "register-entrypoints",
     "run-scan",
@@ -44,7 +49,7 @@ SHARED_SKILLS = [
     "setup-repeater",
 ]
 
-AGENTS = ["bright-application-testing", "bright-remediation-loop"]
+AGENTS = ["bright-application-testing", "bright-discovery", "bright-remediation-loop"]
 
 # Where each agent lives per tool. Codex and Antigravity have no agent concept,
 # so they ship the orchestration prompts as skills instead.
@@ -106,7 +111,7 @@ def groups() -> list[tuple[str, Path, list[Path]]]:
 def check_orphans(covered: set[Path]) -> list[str]:
     """Flag component files the check does not know about.
 
-    Without this, adding a sixth tool package -- or a seventh skill -- would
+    Without this, adding a sixth tool package -- or an eighth skill -- would
     pass CI while being excluded from the very check meant to cover it.
     """
     problems = []
@@ -120,6 +125,59 @@ def check_orphans(covered: set[Path]) -> list[str]:
             f"{path.relative_to(REPO)}: not covered by the sync check -- "
             f"add it to {Path(__file__).name}"
         )
+    return problems
+
+
+PLUGIN_MANIFESTS = [
+    "claude-code/.claude-plugin/plugin.json",
+    "cursor/.cursor-plugin/plugin.json",
+    "codex/.codex-plugin/plugin.json",
+    "github-copilot/plugin.json",
+    "antigravity/plugin.json",
+]
+
+MARKETPLACES = [
+    ".claude-plugin/marketplace.json",
+    ".cursor-plugin/marketplace.json",
+    ".github/plugin/marketplace.json",
+    ".agents/plugins/marketplace.json",
+]
+
+
+def check_manifests() -> list[str]:
+    """Plugin and marketplace manifests agree on names and on one version.
+
+    Each tool reads its own manifest, so a version bumped in one place only
+    ships an update to one tool. Nothing here is auto-fixed.
+    """
+    problems: list[str] = []
+    versions: dict[str, str] = {}
+    for rel in PLUGIN_MANIFESTS + MARKETPLACES:
+        path = REPO / rel
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{rel}: cannot read manifest ({exc})")
+            continue
+        if rel in PLUGIN_MANIFESTS:
+            if data.get("name") != "bright-security":
+                problems.append(f"{rel}: name is {data.get('name')!r}, expected 'bright-security'")
+            versions[rel] = data.get("version")
+            continue
+        if data.get("name") != "brightsec":
+            problems.append(f"{rel}: name is {data.get('name')!r}, expected 'brightsec'")
+        plugins = data.get("plugins") or [{}]
+        if plugins[0].get("name") != "bright-security":
+            problems.append(
+                f"{rel}: plugins[0].name is {plugins[0].get('name')!r}, expected 'bright-security'"
+            )
+        if "version" in data.get("metadata", {}):
+            versions[rel] = data["metadata"]["version"]
+        elif "version" in plugins[0]:
+            versions[rel] = plugins[0]["version"]
+    if len(set(versions.values())) > 1:
+        listing = "\n".join(f"      {rel}: {ver}" for rel, ver in versions.items())
+        problems.append(f"manifest versions differ -- bump them together:\n{listing}")
     return problems
 
 
@@ -188,7 +246,8 @@ def main() -> int:
             elif args.fix:
                 variant.write_text(var_fm + canon_body, encoding="utf-8")
 
-    problems.extend(check_orphans(covered))
+    unfixable = check_orphans(covered) + check_manifests()
+    problems.extend(unfixable)
 
     if args.fix:
         if fixed:
@@ -197,8 +256,8 @@ def main() -> int:
                 print(f"  {item}")
         else:
             print("Already in sync; nothing to write.")
-        # Orphans cannot be repaired automatically.
-        leftovers = [p for p in problems if "not covered by the sync check" in p]
+        # Orphans and manifest drift cannot be repaired automatically.
+        leftovers = unfixable
         for item in leftovers:
             print(f"\n{item}")
         return 1 if leftovers else 0

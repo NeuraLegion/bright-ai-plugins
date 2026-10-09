@@ -7,12 +7,8 @@ description: Apply minimal fixes for Bright findings and verify them by re-runni
 
 ### Prerequisite: a way to get fixes into the target
 
-Every round below ends in a validation scan, which only means anything if the edited code is
-what the target is running. Establish how a fix reaches the target before starting — restarting
-a local process or container, or a rebuild-and-redeploy command the user supplied and authorized.
-
-If there is no such path, this skill cannot complete a round: the comparison in step 6 has
-nothing to compare. Report that instead of running rounds whose results are not evidence.
+Rounds need a way to get the edited code into the target: a restart, or the user's authorized
+rebuild-and-redeploy command. Without one, report that instead of running rounds.
 
 ### Working model
 
@@ -62,8 +58,7 @@ Do not leave placeholder code, fake guards, or broad speculative refactors.
 1. Apply the path established at the start — restart the local process or container, or run the
    user's rebuild-and-redeploy command. Restarting is not enough where the target runs a built
    artifact: it has to be rebuilt and rolled out, or the scan re-tests the old code.
-2. Confirm the running target actually carries the change. A redeploy that silently failed is
-   indistinguishable from a fix that did not work, and costs a scan to find out.
+2. Confirm the running target actually carries the change.
 3. Verify health.
 4. Re-verify auth when the route surface requires it.
 
@@ -72,9 +67,9 @@ Do not leave placeholder code, fake guards, or broad speculative refactors.
 Use the same:
 - `entrypointIds`
 - `tests`
-- attack locations (body, query, path, or headers)
-- `authObjectId`
 - `repeaters`
+- the auth objects the entrypoints carry, verified with `testAuth` before the scan (launch as
+  `run-scan` Step 3 says)
 
 Only narrow or adjust this baseline when the previous scan configuration is now invalid for
 an explicit, documented reason.

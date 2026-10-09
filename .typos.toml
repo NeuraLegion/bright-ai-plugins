@@ -1,8 +1,6 @@
-[build]
+[files]
 # Ignore paths when checking for typos
 ignore-hidden = true
-
-[files]
 extend-exclude = [
   ".git",
   "node_modules",
