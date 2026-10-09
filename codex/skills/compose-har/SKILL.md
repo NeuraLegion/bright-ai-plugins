@@ -26,8 +26,7 @@ each file entry once, in file order, through one session: one login per file. Ea
   or object is a gap, not an entry. A destructive entry targets a sacrificial object created
   and read back before the discovery, never an ID an earlier entry would create.
 - **No invented IDs.** Never use the ID of an object that does not exist in the app, and never
-  edit the app's database or fixtures to make an entry pass: use objects created through the
-  running app or read from it.
+  edit the app's database or fixtures to make an entry pass.
 - **Order** as R5 orders registrations; file order is replay order.
 - **At most 90 entries per file**, under Bright's discovery entrypoint limit; split
   larger groups.
@@ -42,7 +41,7 @@ minutes apart (each logs in), then R5 Fixing.
 
 ### Step 3: Write the file
 
-Generate compact, valid JSON by script in the run's temp directory:
+Generate compact, valid JSON by script in the run's scratch directory:
 `{"log":{"version":"1.2","creator":{"name":"…","version":"…"},"entries":[…]}}`, entries like
 this:
 
@@ -76,8 +75,9 @@ this:
 
 ### Step 4: Upload and discover
 
-1. Upload the file with the Bright CLI, giving each file a unique name (an upload under an
-   existing name replaces that file's content):
+1. Upload the file with the Bright CLI. Start every filename with a prefix unique to this run
+   (e.g. the Repeater or run name: `<run>-api-reads-1.har`); an upload under a name already in
+   the project replaces that file:
 
    ```bash
    FILE_ID=$(npx @brightsec/cli archive:upload --type har --discard false --project <projectId> \

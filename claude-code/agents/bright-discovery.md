@@ -30,9 +30,10 @@ exactly what you could not register and why.
   processed and why.
 - Do NOT run scans — this agent discovers and registers only, never `runScan`.
 - Leave the repository as you found it: do not edit or add files in it. Scratch files, helper
-  scripts, and app data go in a temporary directory outside it. The only exception is dependency
-  installs and build outputs the project's own build writes inside it (e.g. `node_modules`,
-  `dist/`). Note `git status --ignored` before you start; Cleanup undoes this run's changes.
+  scripts, and app data go in the run's scratch directory outside it, never a literal `/tmp`. The
+  only exception is dependency installs and build outputs the project's own build writes inside
+  it (e.g. `node_modules`, `dist/`). Note `git status --ignored` before you start; Cleanup
+  undoes this run's changes.
 - Load each skill's full instructions via the Skill tool where available; otherwise read
   `skills/<name>/SKILL.md` from the same plugin or package this agent was loaded from — never a
   copy from another tool's plugin cache or install. If several copies exist and you cannot tell
@@ -115,12 +116,12 @@ Return:
   frontend was served
 - the registered attack surface: the `register-entrypoints` counts line, then entrypoint IDs
   with method, URL, the stored parameter values and the response status Bright recorded (from
-  `getEntrypoint`), unhealthy ones listed separately inline; a large set may go to a file in
-  the run's temp directory, path printed, as the skill's Output allows
+  `getEntrypoint`), unhealthy ones listed separately inline; when the skill's Output puts the
+  table in a file, give its path, and keep every other item of this Output inline
 - **scan-risk entrypoints:** operations registered but flagged as dangerous under fuzzing, with
   a one-line reason each citing handler evidence
-- the discovery path — whitebox, plus any shipped-spec upload, `compose-har` file, and fallback
-  crawl, each with its `discoveryId`, and the crawl's justification
+- the discovery path — whitebox, plus any `compose-har` file and fallback crawl, each with its
+  `discoveryId`, and the crawl's justification
 - duplicates merged and noise excluded
 - **the auth map:** the public route groups, and each mechanism with its route groups, the
   guard's file and line, and either its auth object ID (supplied, reused, or created) or a
@@ -133,7 +134,8 @@ Return:
 
 ## Cleanup
 
-Always stop the temporary processes you started (the Repeater CLI, the application). **Do NOT
+Always stop the temporary processes you started (the Repeater CLI as `setup-repeater` Step 3
+says, the application). **Do NOT
 delete the Repeater record in Bright.** Then compare `git status --ignored` with the start and undo, path by path, only what this
 run changed or created, build outputs included. Leave files that were already modified or untracked at the start as they are, and
 report them. Never run `git checkout .`, `git restore .`, `git reset --hard`, `git clean`, or

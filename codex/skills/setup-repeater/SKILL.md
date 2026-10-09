@@ -77,6 +77,10 @@ Start the Bright CLI Repeater:
 npx @brightsec/cli repeater --id <REPEATER_ID> --hostname "$BRIGHT_HOSTNAME" --token "$BRIGHT_TOKEN"
 ```
 
+Run it in the background and keep its PID for Cleanup. To find it later, use
+`pgrep -f -- "--id <REPEATER_ID>"` without `-l` or `-a`. Never print a process command line
+(`ps`, `pgrep -l`/`-a`, `/proc/*/cmdline`): it carries the token.
+
 ### Step 4: Verify connectivity
 
 1. Poll `listRepeaters` until the Repeater is connected. This call goes through the MCP server,

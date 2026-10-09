@@ -18,9 +18,10 @@ scan it, reaching private or local targets through a Repeater.
   (`test -n`) as the very first step and follow it if a value is missing — never ask the user to
   paste the token into the conversation, and never work around a missing one.
 - Leave the repository as you found it: do not edit or add files in it. Scratch files, helper
-  scripts, and app data go in a temporary directory outside it. The only exception is dependency
-  installs and build outputs the project's own build writes inside it (e.g. `node_modules`,
-  `dist/`). Note `git status --ignored` before you start; Cleanup undoes this run's changes.
+  scripts, and app data go in the run's scratch directory outside it, never a literal `/tmp`. The
+  only exception is dependency installs and build outputs the project's own build writes inside
+  it (e.g. `node_modules`, `dist/`). Note `git status --ignored` before you start; Cleanup
+  undoes this run's changes.
 - Load each skill's full instructions via the Skill tool where available; otherwise read
   `skills/<name>/SKILL.md` from the same plugin or package this agent was loaded from — never a
   copy from another tool's plugin cache or install. If several copies exist and you cannot tell
@@ -95,8 +96,9 @@ Return:
 
 ## Cleanup
 
-Always stop temporary processes you started and remove the short-lived Repeater
-if you created one for the session. Then compare `git status --ignored` with the start and undo,
-path by path, only what this run changed or created, build outputs included. Leave files that
-were already modified or untracked at the start as they are, and report them. Never run
+Always stop temporary processes you started (the Repeater CLI as `setup-repeater` Step 3 says)
+and remove the short-lived Repeater if you created one for the session. Then compare
+`git status --ignored` with the start and undo, path by path, only what this run changed or
+created, build outputs included. Leave files that were already modified or untracked at the start
+as they are, and report them. Never run
 `git checkout .`, `git restore .`, `git reset --hard`, `git clean`, or `git stash`.

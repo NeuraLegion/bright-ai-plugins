@@ -29,6 +29,10 @@ verify it from the code, recording per operation:
   (e.g. `dist/`). Frontend source with no bundle in the served `index.html` is a JavaScript
   coverage gap: the frontend was not built or served
 
+A shipped API definition (OpenAPI/Swagger) is input for this inventory and for `compose-har`
+entries: paths, parameters, schemas. Values still come from Step 2; its `example` values are not
+evidence. Never upload the definition itself to Bright.
+
 Also list the surface the code cannot reveal — routes built at runtime, plugin route tables,
 server-rendered pages not statically visible, parts with no source in the repository.
 That list is the only input to Step 6.
@@ -46,8 +50,7 @@ each request from a concrete URL on `baseUrl`, deriving every value from the cod
   fields being set.
 - **Types and validation** — the declared type, format hints (email, UUID, date-time, URI),
   patterns, length bounds, every required DTO field, nested object and array shapes.
-- **Seeds and specs** — IDs, slugs, and foreign keys from the seeded data; `example`
-  values a shipped spec provides only where the code accepts them.
+- **Seeds** — IDs, slugs, and foreign keys from the seeded data.
 - **Dependent objects** — read real IDs from the running app. Create a missing object first
   through the application's API (`curl` against `baseUrl` with the run's credentials), and a
   separate sacrificial object for every destructive operation. If you cannot, record the route
@@ -114,18 +117,7 @@ reference.
 the auth object obtains its credential through requests (not static headers alone) and more than
 10 of its operations remain, when more than 50 remain, or once a registration meets a login rate
 limit or lockout, register the rest with the `compose-har` skill, loaded in full, and verify
-them once each discovery completes; a shipped spec only informs their Steps 1–2. For the others,
-if the repository ships a machine-readable API definition (OpenAPI/Swagger, or a template that
-renders one), register their surface from it; the code inventory stays the source of truth.
-Render or copy it to the run's temp directory, point its server URL at the API's mount on
-`baseUrl` (OAS3 `servers`; Swagger 2 `schemes`, `host`, `basePath`), and diff its operations
-with the Step 1 inventory both ways: drop from the copy what the code does not define, Step 4
-excludes, or `compose-har` registers, plus scan-risk and destructive operations (register those
-by hand, in this step's order); register by hand every inventory operation it lacks.
-`uploadApiDefinition` the copy (base64 `content` + `filename`, or `url` if the app serves it
-unchanged), then `runDiscovery` with the `fileId`, the Repeater, and the `authObjectId` guarding
-that surface. Handle the results as Step 6 says, health-checking one before editing the rest;
-delete any on another host. Spec examples alone are not evidence.
+them once each discovery completes.
 
 Register each operation with `addEntrypoint`: `projectId`; `request` with `method`, `url`,
 `headers` as an object of name→string array (including the content type), and `body`;
@@ -146,7 +138,8 @@ top-level `status` (`new`/`changed`/`tested`/`vulnerable`) is the security statu
 
 **Evidence.** Every gap, health verdict, and runtime-based exclusion cites a request actually
 sent and quotes its response. Never register an unevidenced value (an invented ID, another
-mechanism's credentials) as real: obtain it or record a gap.
+mechanism's credentials) as real: obtain it or record a gap. Never edit the app's database or
+fixtures to make a registration pass.
 
 Check health at these points; Step 7 reconciles the rest:
 
@@ -159,10 +152,11 @@ Check health at these points; Step 7 reconciles the rest:
 
 **Fixing.** The auth map's rejection or no response on an authenticated route goes back to
 `setup-auth`; if its mechanism ends as a gap, delete those entrypoints.
-Otherwise read the error in `response.body`, fix the values or path with `editEntrypoint`, and
-check again — at most 3 attempts. Then keep an entrypoint whose handler answered as unhealthy
-with its status and message; delete one whose request never reached the handler (404, SPA shell,
-no response) with `deleteEntrypoint` and record a gap.
+Otherwise read the error in `response.body`, fix the values or path with `editEntrypoint` (or
+re-register it), and check again — at most 3 attempts, each response quoted. Keep an entrypoint
+whose handler answered as unhealthy only after 3 failed attempts, with its status and message;
+delete one whose request never reached the handler (404, SPA shell, no response) with
+`deleteEntrypoint` and record a gap.
 
 **Unreachable target.** If `addEntrypoint` or `editEntrypoint` fails with "Cannot access the
 target" or similar, stop registering and list the failed requests. Recover in at most 3
@@ -176,9 +170,9 @@ Use `runDiscovery` with `crawlerUrls` only for the gaps Step 1 listed — a larg
 reason. Pass `projectId`, a descriptive `name`, `crawlerUrls` seeded at the gap (not just the
 `baseUrl`), `repeaters` as a single-element array for private or local targets, and the
 `authObjectId` of the mechanism guarding the seeded area (none if public), one crawl per auth
-object. A user-supplied HAR (uploaded as `compose-har` Step 4 says) or a synthesized OpenAPI
-document (`uploadApiDefinition`), then `runDiscovery` with its `fileId`, can fill a gap the
-same way.
+object. A user-supplied HAR (uploaded as `compose-har` Step 4 says), then `runDiscovery` with
+its `fileId`, can fill a gap the same way. Register gap routes you can describe yourself through
+`compose-har`, or with `addEntrypoint` when few remain (Step 5 criterion).
 
 For every discovery, poll `getDiscoveryStatus` until it completes, then read the
 results with `listDiscoveryEntrypoints` (`limit: 100`, following `next`) and
@@ -203,10 +197,11 @@ Read this target's entrypoints with `listEntrypoints` (`projectId`,
    (`listEntrypoints` has no parameters or health), and build the final table from the reads:
    ID, method, URL, `authObjectId`, the parameters in `request`, `response.status` and content
    type. Only a response on the handler's success path (Step 5) is healthy; no response, a 4xx
-   or 5xx, or an empty 2xx where seeded data should match is unhealthy.
-3. Confirm no two entrypoints cover one operation, no static noise remains (JavaScript kept), and
-   every unhealthy entrypoint has been through Step 5 Fixing — fixed, kept as unhealthy with its
-   response quoted, or deleted as a gap.
+   or 5xx, or an empty list or body where seeded data should match is unhealthy, not success.
+3. Confirm no two entrypoints cover one operation and no static noise remains (JavaScript kept).
+   Run Step 5 Fixing on every unhealthy entrypoint from item 2: each ends fixed, deleted as a
+   gap, or kept as unhealthy after 3 `editEntrypoint` or re-registration attempts, each response
+   quoted.
 
 If items 1–3 changed anything, repeat the paginated `listEntrypoints` and item 2 before the
 Output; an entrypoint not read since its last edit is never healthy.
@@ -225,11 +220,12 @@ Return:
   reconciliation, E and G from the Step 7 diff. Other reported numbers must match it
 - the final active set a scan reuses — every entrypoint left after Step 7, healthy or not:
   project entrypoint ID, method, URL, `authObjectId`, the values stored in `request`, and
-  Bright's recorded `response.status`. A large set may go to a file in the run's temp directory,
-  path printed; always list the unhealthy ones separately inline with their quoted response
+  Bright's recorded `response.status`. Over 50 entrypoints, write this table to a file in the
+  run's scratch directory and give its path; always list the unhealthy ones separately inline
+  with their quoted response
 - **scan-risk entrypoints**, each with its one-line reason
 - excluded operations with handler evidence, and coverage gaps with evidence for each missed or
   pruned route
 - duplicates merged and noise excluded, with counts
-- the discovery path — whitebox, plus any crawl, spec upload, or `compose-har` file with its
+- the discovery path — whitebox, plus any crawl or `compose-har` file with its
   `discoveryId` and justification

@@ -23,11 +23,11 @@ each fix by re-running the scan that found it.
 - Require `BRIGHT_TOKEN` and `BRIGHT_HOSTNAME`: run the `setup-repeater` credential check
   (`test -n`) as the very first step and follow it if a value is missing — never ask the user to
   paste the token into the conversation, and never work around a missing one.
-- Change only the files a fix needs. Scratch files, helper scripts, and app data go in a
-  temporary directory outside the repository. The only exception is dependency installs and
-  build outputs the project's own build or redeploy writes inside it (e.g. `node_modules`,
-  `dist/`). Note `git status --ignored` before you start; Cleanup undoes everything else this run
-  did.
+- Change only the files a fix needs. Scratch files, helper scripts, and app data go in the run's
+  scratch directory outside the repository, never a literal `/tmp`. The only exception is
+  dependency installs and build outputs the project's own build or redeploy writes inside it
+  (e.g. `node_modules`, `dist/`). Note `git status --ignored` before you start; Cleanup undoes
+  everything else this run did.
 - Load each skill's full instructions via the Skill tool where available; otherwise read
   `skills/<name>/SKILL.md` from the same plugin or package this agent was loaded from — never a
   copy from another tool's plugin cache or install. If several copies exist and you cannot tell
@@ -104,7 +104,8 @@ Return:
 
 ## Cleanup
 
-Always stop temporary processes you started and remove any Repeater created for the session.
+Always stop temporary processes you started (the Repeater CLI as `setup-repeater` Step 3 says)
+and remove any Repeater created for the session.
 Then compare `git status --ignored` with the start: keep the fix edits listed in the summary, and
 undo, path by path, only what else this run changed or created, build outputs included. Leave
 files that were already modified or untracked at the start as they are, and report them. Never
