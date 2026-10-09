@@ -33,8 +33,8 @@ or reach the wrong cluster, report that the MCP server needs re-registering inst
 
 A Repeater is needed only for **private or local** targets. For a public one (e.g. a public
 staging URL), resolve the project in Step 1, skip Steps 2–4, and pass no `repeaters` to the scan;
-a missing `BRIGHT_HOSTNAME` then does not matter. Ask for the hostname before Step 3 if a
-Repeater turns out to be necessary.
+a missing `BRIGHT_HOSTNAME` then matters only for a `compose-har` upload, which needs it too. Ask
+for the hostname before Step 3 if a Repeater turns out to be necessary, or before that upload.
 
 ### Step 1: Resolve the Bright project
 
